@@ -1,0 +1,17 @@
+.login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+mat-card {
+  padding: 24px;
+  width: 400px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
