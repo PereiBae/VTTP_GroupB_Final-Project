@@ -4,7 +4,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './components/login/login.component';
-import {provideHttpClient} from '@angular/common/http';
+import {HTTP_INTERCEPTORS, provideHttpClient} from '@angular/common/http';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {RouterModule, Routes} from '@angular/router';
 import { MaterialModule } from './material.module';
@@ -26,6 +26,7 @@ import {TemplateFormComponent} from './components/template/template-form/templat
 import {TemplateListComponent} from './components/template/template-list/template-list.component';
 import {WorkoutListComponent} from './components/workout/workout-list/workout-list.component';
 import {WorkoutSessionComponent} from './components/workout/workout-session/workout-session.component';
+import {AuthInterceptor} from './guards/auth.interceptor';
 
 const appRoutes: Routes = [
   { path: '', component: LoginComponent, canActivate: [AlreadyLoggedInGuard]},
@@ -89,7 +90,12 @@ const appRoutes: Routes = [
     BrowserAnimationsModule,
     FormsModule
   ],
-  providers: [provideHttpClient()],
+  providers: [
+    provideHttpClient(),
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true}],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
