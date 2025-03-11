@@ -1,3 +1,5 @@
+import {WorkoutSession} from './workout-session';
+
 export interface DiaryEntry {
   id?: string;
   userId?: string;
@@ -5,8 +7,8 @@ export interface DiaryEntry {
   feeling: string;
   notes: string;
   workoutPerformed: boolean;
-  workoutSessionId?: string;
   spotifyTrackId?: string;
   spotifyTrackName?: string;
   spotifyArtistName?: string;
+  workout?:WorkoutSession;
 }

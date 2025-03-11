@@ -46,3 +46,36 @@ mat-list-item {
 button {
   margin-top: 16px;
 }
+
+/* Add these styles to dashboard.component.css */
+
+/* Make sure list items have enough height and proper layout */
+::ng-deep .mat-mdc-list-item {
+  height: auto !important;
+  padding: 12px 0 !important;
+  margin-bottom: 8px !important;
+}
+
+/* Position the button correctly within list items */
+::ng-deep .mat-mdc-list-item button.mat-icon-button {
+  position: absolute !important;
+  right: 0 !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+  z-index: 5 !important;
+}
+
+/* Add some right padding to ensure text doesn't overlap with button */
+::ng-deep .mat-mdc-list-item-content {
+  padding-right: 48px !important;
+}
+
+/* Make sure the list item text is properly sized/aligned */
+[matListItemTitle], [matListItemLine] {
+  display: block;
+  width: calc(100% - 48px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

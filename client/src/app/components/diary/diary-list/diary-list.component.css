@@ -68,3 +68,41 @@
 .spotify-track mat-icon {
   margin-right: 8px;
 }
+
+/* Add these styles to diary-list.component.css */
+
+/* First, reset the Angular Material default styles that might be causing conflicts */
+mat-card-actions {
+  display: block !important; /* Change from flex to block */
+  padding: 8px 16px !important;
+  margin: 0 !important;
+}
+
+/* Create a proper container for the bottom section */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* Style the view button */
+.view-button {
+  min-width: 64px !important;
+  flex-shrink: 0;
+}
+
+/* Style the workout preview */
+.workout-preview {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  background-color: #e3f2fd;
+  border-radius: 4px;
+  margin-left: 16px;
+  max-width: 65%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

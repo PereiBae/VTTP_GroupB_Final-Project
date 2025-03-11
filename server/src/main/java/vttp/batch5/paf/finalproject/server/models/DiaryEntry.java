@@ -21,7 +21,7 @@ public class DiaryEntry {
     private String spotifyArtistName;
 
     // Reference to workout if performed
-    private String workoutSessionId;
+    private WorkoutSession workoutSession;
 
     // Getters and Setters
     public String getId() {
@@ -72,12 +72,12 @@ public class DiaryEntry {
         this.workoutPerformed = workoutPerformed;
     }
 
-    public String getWorkoutSessionId() {
-        return workoutSessionId;
+    public WorkoutSession getWorkoutSession() {
+        return workoutSession;
     }
 
-    public void setWorkoutSessionId(String workoutSessionId) {
-        this.workoutSessionId = workoutSessionId;
+    public void setWorkoutSession(WorkoutSession workoutSession) {
+        this.workoutSession = workoutSession;
     }
 
     public String getSpotifyTrackId() {

@@ -21,13 +21,10 @@
 
         <div class="form-row time-row">
           <mat-form-field appearance="fill">
-            <mat-label>Start Time</mat-label>
+            <mat-label>Workout Date</mat-label>
             <input matInput [matDatepicker]="startPicker" formControlName="startTime" required>
             <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
             <mat-datepicker #startPicker></mat-datepicker>
-            <mat-error *ngIf="workoutForm.get('startTime')?.hasError('required')">
-              Start time is required
-            </mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="fill" *ngIf="isEdit">
@@ -41,7 +38,7 @@
         <div class="form-row">
           <mat-form-field appearance="fill">
             <mat-label>Notes</mat-label>
-            <textarea matInput formControlName="notes" rows="3"></textarea>
+            <textarea matInput formControlName="notes" rows="3" class="large-textarea"></textarea>
           </mat-form-field>
         </div>
 
@@ -170,7 +167,7 @@
         <button mat-raised-button color="accent" type="button" *ngIf="isEdit && !hasEndTime" (click)="finishWorkout()">
           FINISH WORKOUT
         </button>
-        <button mat-raised-button color="primary" type="button" (click)="saveWorkout()" [disabled]="workoutForm.invalid || loading$">
+        <button mat-raised-button color="primary" type="button" (click)="saveWorkout()" [disabled]="loading$ | async">
           {{ isEdit ? 'UPDATE' : 'START' }}
         </button>
       </mat-card-actions>

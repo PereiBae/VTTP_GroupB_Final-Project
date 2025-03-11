@@ -7,9 +7,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import vttp.batch5.paf.finalproject.server.models.DiaryEntry;
+import vttp.batch5.paf.finalproject.server.models.WorkoutSession;
 import vttp.batch5.paf.finalproject.server.repositories.mongo.DiaryRepository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Controller
@@ -30,6 +32,15 @@ public class DiaryController {
         if (diaryRepo.hasDiaryEntryForDate(authentication.getName(), entry.getDate())) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(null); // User already has an entry for this date
+        }
+
+        // If workout was performed but no workout is attached, create a placeholder
+        if (entry.isWorkoutPerformed() && entry.getWorkoutSession() == null) {
+            WorkoutSession workout = new WorkoutSession();
+            workout.setName("Workout on " + entry.getDate());
+            workout.setStartTime(LocalDateTime.now());
+            workout.setUserId(authentication.getName());
+            entry.setWorkoutSession(workout);
         }
 
         DiaryEntry created = diaryRepo.createDiaryEntry(entry);
@@ -113,7 +124,21 @@ public class DiaryController {
         // Preserve the userId and date from the existing entry
         entry.setId(id);
         entry.setUserId(existing.getUserId());
-        entry.setDate(existing.getDate());
+        // If workout was performed but no workout is attached, preserve existing workout or create placeholder
+        if (entry.isWorkoutPerformed() && entry.getWorkoutSession() == null) {
+            if (existing.getWorkoutSession() != null) {
+                entry.setWorkoutSession(existing.getWorkoutSession());
+            } else {
+                WorkoutSession workout = new WorkoutSession();
+                workout.setName("Workout on " + entry.getDate());
+                workout.setStartTime(LocalDateTime.now());
+                workout.setUserId(authentication.getName());
+                entry.setWorkoutSession(workout);
+            }
+        } else if (!entry.isWorkoutPerformed()) {
+            // If workout is not performed, remove any workout attached
+            entry.setWorkoutSession(null);
+        }
 
         DiaryEntry updated = diaryRepo.updateDiaryEntry(entry);
         return ResponseEntity.ok(updated);

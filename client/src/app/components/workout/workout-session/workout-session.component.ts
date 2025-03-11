@@ -73,8 +73,23 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy{
       takeUntil(this.destroy$)
     ).subscribe(workout => {
       if (workout) {
+        // Save current exercise values before updating form
+        const currentValues = this.exercises.controls.map(control => control.value);
+
         this.updateFormFromWorkout(workout);
         this.hasEndTime = !!workout.endTime;
+
+        // Restore exercise names and other values that user might have edited
+        if (currentValues.length > 0 && this.exercises.length === currentValues.length) {
+          currentValues.forEach((value, index) => {
+            if (value.name && value.name !== 'New Exercise') {
+              this.exercises.at(index).get('name')?.setValue(value.name);
+            }
+            if (value.muscleGroup) {
+              this.exercises.at(index).get('muscleGroup')?.setValue(value.muscleGroup);
+            }
+          });
+        }
       }
     });
 
@@ -122,10 +137,12 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy{
       this.exercises.removeAt(0);
     }
 
+    const workoutDate = workout.startTime ? new Date(workout.startTime) : new Date();
+
     // Patch basic workout details
     this.workoutForm.patchValue({
       name: workout.name,
-      startTime: workout.startTime ? new Date(workout.startTime) : new Date(),
+      startTime: workoutDate,
       endTime: workout.endTime ? new Date(workout.endTime) : null,
       templateId: workout.templateId,
       notes: workout.notes
@@ -245,6 +262,7 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy{
 
   addSet(exerciseIndex: number): void {
     const exerciseSets = this.getExerciseSets(exerciseIndex);
+    const exerciseForm = this.exercises.at(exerciseIndex);
     const lastSet = exerciseSets.at(exerciseSets.length - 1)?.value;
 
     const newSet: ExerciseSet = {
@@ -255,7 +273,10 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy{
       completed: false
     };
 
-    this.workoutStore.addSet({ exerciseIndex, set: newSet });
+    this.workoutStore.addSet({
+      exerciseIndex,
+      set: newSet
+    });
   }
 
   removeSet(exerciseIndex: number, setIndex: number): void {
@@ -269,16 +290,23 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy{
   }
 
   saveWorkout(): void {
-    if (this.workoutForm.invalid) return;
+    if (!this.workoutForm.get('name')?.value) {
+      this.snackBar.open('Please enter a workout name', 'Close', { duration: 3000 });
+      return;
+    }
 
     // Update the workout in the store with form values
     const formValue = this.workoutForm.value;
 
     // First, update basic workout details
+    const workoutDate = formValue.startTime ? new Date(formValue.startTime) : new Date();
+// Set time to noon to avoid timezone issues
+    workoutDate.setHours(12, 0, 0, 0);
+
     this.workoutStore.updateWorkoutDetails({
       name: formValue.name,
-      startTime: formValue.startTime?.toISOString(),
-      endTime: formValue.endTime?.toISOString(),
+      startTime: workoutDate.toISOString(),
+      endTime: formValue.endTime ? new Date(formValue.endTime).toISOString() : undefined,
       notes: formValue.notes,
       templateId: formValue.templateId
     });

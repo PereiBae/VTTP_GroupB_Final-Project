@@ -1,3 +1,4 @@
+<!-- src/app/components/diary/diary-entry/diary-entry.component.html -->
 <div class="diary-container">
   <div class="header">
     <h1>{{ isEdit ? 'Edit Diary Entry' : 'New Diary Entry' }}</h1>
@@ -9,6 +10,11 @@
   <form [formGroup]="diaryForm" (ngSubmit)="saveDiaryEntry()">
     <mat-card>
       <mat-card-content>
+        <!-- Date and Feeling Section -->
+        <div class="section-header">
+          <h2>Diary Entry</h2>
+        </div>
+
         <div class="form-row">
           <mat-form-field appearance="fill">
             <mat-label>Date</mat-label>
@@ -55,45 +61,154 @@
           </mat-form-field>
         </div>
 
-        <div class="form-row">
+        <!-- Workout Toggle Section -->
+        <div class="form-row workout-toggle">
           <mat-slide-toggle formControlName="workoutPerformed">
             I worked out today
           </mat-slide-toggle>
         </div>
 
-        <div class="form-row" *ngIf="diaryForm.get('workoutPerformed')?.value">
-          <ng-container *ngIf="!workoutSelected; else workoutDetails">
-            <button mat-raised-button color="accent" (click)="startNewWorkout()">
-              Start New Workout
-            </button>
-            <span class="separator">or</span>
-            <button mat-raised-button (click)="openWorkoutSelector()">
-              Select Existing Workout
-            </button>
-          </ng-container>
+        <!-- Workout Section -->
+        <div *ngIf="workoutSelected" class="workout-section">
+          <div class="section-header">
+            <h2>Workout Details</h2>
+          </div>
 
-          <ng-template #workoutDetails>
-            <mat-card class="workout-card">
-              <mat-card-header>
-                <mat-card-title>{{ selectedWorkout?.name }}</mat-card-title>
-                <mat-card-subtitle>
-                  {{ selectedWorkout?.startTime | date:'medium' }}
-                </mat-card-subtitle>
-              </mat-card-header>
-              <mat-card-content>
-                <p>{{ selectedWorkout?.exercises?.length || 0 }} exercises</p>
-              </mat-card-content>
-              <mat-card-actions>
-                <button mat-button type="button" (click)="viewWorkout()">VIEW</button>
-                <button mat-button type="button" (click)="removeWorkout()">REMOVE</button>
-              </mat-card-actions>
-            </mat-card>
-          </ng-template>
+          <div [formGroup]="workoutForm">
+            <div class="form-row">
+              <mat-form-field appearance="fill" class="full-width">
+                <mat-label>Workout Name</mat-label>
+                <input matInput formControlName="name">
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="fill" class="full-width">
+                <mat-label>Workout Notes</mat-label>
+                <textarea matInput formControlName="notes" rows="3" class="large-textarea"></textarea>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <h3>Start with a template:</h3>
+
+              <div class="template-select" *ngIf="templates.length > 0; else noTemplates">
+                <mat-form-field appearance="fill" class="full-width">
+                  <mat-label>Select Template</mat-label>
+                  <mat-select (selectionChange)="onTemplateSelected($event.value)">
+                    <mat-option [value]="null">No Template</mat-option>
+                    <mat-option *ngFor="let template of templates" [value]="template">
+                      {{ template.name }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <ng-template #noTemplates>
+                <p>No templates available. <a routerLink="/templates/new">Create a template</a> to quickly start workouts.</p>
+              </ng-template>
+            </div>
+
+            <h3>Exercises</h3>
+
+            <div *ngIf="exercises.length === 0" class="no-exercises">
+              <p>No exercises added yet.</p>
+            </div>
+
+            <div formArrayName="exercises">
+              <mat-accordion>
+                <mat-expansion-panel *ngFor="let exercise of exerciseControls; let i = index" [formGroupName]="i">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      {{ exercise.get('name')?.value || 'New Exercise' }}
+                    </mat-panel-title>
+                    <mat-panel-description>
+                      {{ getExerciseSets(i).length || 0 }} sets
+                    </mat-panel-description>
+                  </mat-expansion-panel-header>
+
+                  <div class="exercise-form">
+                    <div class="exercise-header">
+                      <mat-form-field appearance="fill">
+                        <mat-label>Exercise</mat-label>
+                        <input matInput formControlName="name" required>
+                      </mat-form-field>
+
+                      <mat-form-field appearance="fill">
+                        <mat-label>Muscle Group</mat-label>
+                        <input matInput formControlName="muscleGroup">
+                      </mat-form-field>
+
+                      <button mat-icon-button color="warn" type="button" (click)="removeExercise(i)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+
+                    <div class="sets-header">
+                      <span class="set-col">Set</span>
+                      <span class="weight-col">Weight (kg)</span>
+                      <span class="reps-col">Reps</span>
+                      <span class="rpe-col">RPE</span>
+                      <span class="completed-col">Done</span>
+                      <span class="actions-col"></span>
+                    </div>
+
+                    <div formArrayName="sets">
+                      <div *ngFor="let set of getSetsControls(i); let j = index" [formGroupName]="j" class="set-row">
+                        <span class="set-col">{{ j + 1 }}</span>
+
+                        <span class="weight-col">
+                          <mat-form-field appearance="outline">
+                            <input matInput type="number" formControlName="weight" min="0">
+                          </mat-form-field>
+                        </span>
+
+                        <span class="reps-col">
+                          <mat-form-field appearance="outline">
+                            <input matInput type="number" formControlName="reps" min="0">
+                          </mat-form-field>
+                        </span>
+
+                        <span class="rpe-col">
+                          <mat-form-field appearance="outline">
+                            <input matInput type="number" formControlName="rpe" min="1" max="10">
+                          </mat-form-field>
+                        </span>
+
+                        <span class="completed-col">
+                          <mat-checkbox formControlName="completed"></mat-checkbox>
+                        </span>
+
+                        <span class="actions-col">
+                          <button mat-icon-button color="warn" type="button" (click)="removeSet(i, j)" *ngIf="getExerciseSets(i).length > 1">
+                            <mat-icon>remove_circle</mat-icon>
+                          </button>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="set-actions">
+                      <button mat-stroked-button type="button" (click)="addSet(i)">
+                        <mat-icon>add</mat-icon> Add Set
+                      </button>
+                    </div>
+                  </div>
+                </mat-expansion-panel>
+              </mat-accordion>
+            </div>
+
+            <div class="add-exercise">
+              <button mat-raised-button color="primary" type="button" (click)="openExerciseSearch()">
+                <mat-icon>add</mat-icon> Add Exercise
+              </button>
+            </div>
+          </div>
         </div>
 
+        <!-- Spotify Section (Optional/Future Feature) -->
         <div class="form-row spotify-section">
           <label>Add song of the day</label>
-          <div class="spotify-search" *ngIf="!spotifyTrackSelected">
+          <div class="spotify-search">
             <button mat-raised-button color="accent" type="button">
               <mat-icon>search</mat-icon>
               Search Spotify

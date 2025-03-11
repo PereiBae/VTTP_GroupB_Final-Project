@@ -1,39 +1,64 @@
-import {Component, inject, OnInit} from '@angular/core';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {Component, OnDestroy, OnInit} from '@angular/core';
+import {FormArray, FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {WorkoutSession} from '../../../models/workout-session';
 import {DiaryService} from '../../../services/diary.service';
-import {WorkoutService} from '../../../services/workout.service';
 import {ActivatedRoute, Router} from '@angular/router';
 import {MatDialog} from '@angular/material/dialog';
 import {DiaryEntry} from '../../../models/diary-entry';
-import {formatDate} from '@angular/common';
+import {Observable, Subject, takeUntil} from 'rxjs';
+import {WorkoutTemplate} from '../../../models/workout-template';
+import {TemplateService} from '../../../services/template.service';
+import {AuthService} from '../../../services/auth.service';
+import {WorkoutStore} from '../../../stores/workout.store';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {ExerciseLog, ExerciseSet} from '../../../models/exercise-log';
 
 @Component({
   selector: 'app-diary-entry',
   standalone: false,
   templateUrl: './diary-entry.component.html',
-  styleUrl: './diary-entry.component.css'
+  styleUrl: './diary-entry.component.css',
+  providers:[WorkoutStore]
 })
-export class DiaryEntryComponent implements OnInit{
+export class DiaryEntryComponent implements OnInit, OnDestroy{
 
   diaryForm!: FormGroup;
+  workoutForm!: FormGroup;
   isEdit = false;
   entryId?: string;
   loading = false;
+  spotifyTrackSelected = false
 
   workoutSelected = false;
-  selectedWorkout?: WorkoutSession;
-  spotifyTrackSelected = false;
+  templates: WorkoutTemplate[] = [];
 
-  private formBuilder = inject(FormBuilder)
-  private diaryService = inject(DiaryService)
-  private workoutService = inject(WorkoutService)
-  private route = inject(ActivatedRoute)
-  private router = inject(Router)
-  private dialog = inject(MatDialog)
+  // ComponentStore selectors
+  workout$: Observable<WorkoutSession | null>;
+  workoutLoading$: Observable<boolean>;
+  workoutError$: Observable<string | null>;
+
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private formBuilder: FormBuilder,
+    private diaryService: DiaryService,
+    private templateService: TemplateService,
+    private authService: AuthService,
+    private workoutStore: WorkoutStore,
+    private route: ActivatedRoute,
+    private router: Router,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
+  ) {
+    this.workout$ = this.workoutStore.currentWorkout$;
+    this.workoutLoading$ = this.workoutStore.loading$;
+    this.workoutError$ = this.workoutStore.error$;
+  }
 
   ngOnInit(): void {
-    this.createForm();
+    this.createForms();
+    this.loadTemplates();
+
     this.entryId = this.route.snapshot.paramMap.get('id') || undefined;
     this.isEdit = !!this.entryId;
 
@@ -44,27 +69,64 @@ export class DiaryEntryComponent implements OnInit{
       this.diaryForm.patchValue({
         date: new Date()
       });
+
+      // Initialize empty workout
+      this.workoutStore.initializeWorkout({
+        name: 'Today\'s Workout',
+        startTime: new Date().toISOString(),
+        exercises: []
+      });
     }
 
     // React to workoutPerformed toggle
     this.diaryForm.get('workoutPerformed')?.valueChanges.subscribe(value => {
-      if (!value) {
-        this.workoutSelected = false;
-        this.selectedWorkout = undefined;
+      this.workoutSelected = value;
+    });
+
+    // Subscribe to workout store changes
+    this.workout$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(workout => {
+      if (workout) {
+        this.updateWorkoutForm(workout);
       }
     });
   }
 
-  createForm(): void {
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  createForms(): void {
+    // Create diary form
     this.diaryForm = this.formBuilder.group({
       date: ['', Validators.required],
       feeling: ['okay', Validators.required],
       notes: [''],
       workoutPerformed: [false],
-      workoutSessionId: [''],
       spotifyTrackId: [''],
       spotifyTrackName: [''],
       spotifyArtistName: ['']
+    });
+
+    // Create workout form (will be managed through WorkoutStore)
+    this.workoutForm = this.formBuilder.group({
+      name: ['Today\'s Workout'],
+      notes: [''],
+      templateId: [null],
+      exercises: this.formBuilder.array([])
+    });
+  }
+
+  loadTemplates(): void {
+    this.templateService.getTemplates().subscribe({
+      next: (templates) => {
+        this.templates = templates;
+      },
+      error: (error) => {
+        console.error('Error loading templates', error);
+      }
     });
   }
 
@@ -80,19 +142,23 @@ export class DiaryEntryComponent implements OnInit{
           feeling: entry.feeling,
           notes: entry.notes,
           workoutPerformed: entry.workoutPerformed,
-          workoutSessionId: entry.workoutSessionId,
           spotifyTrackId: entry.spotifyTrackId,
           spotifyTrackName: entry.spotifyTrackName,
           spotifyArtistName: entry.spotifyArtistName
         });
 
         // If there's a workout, load it
-        if (entry.workoutPerformed && entry.workoutSessionId) {
-          this.loadWorkout(entry.workoutSessionId);
+        if (entry.workoutPerformed && entry.workout) {
+          this.workoutSelected = true;
+          this.workoutStore.setCurrentWorkout(entry.workout);
+        } else {
+          // Initialize empty workout
+          this.workoutStore.initializeWorkout({
+            name: 'Today\'s Workout',
+            startTime: new Date().toISOString(),
+            exercises: []
+          });
         }
-
-        // Check if Spotify track is set
-        this.spotifyTrackSelected = !!entry.spotifyTrackId;
 
         this.loading = false;
       },
@@ -103,50 +169,272 @@ export class DiaryEntryComponent implements OnInit{
     });
   }
 
-  loadWorkout(workoutId: string): void {
-    this.workoutService.getWorkoutSessionById(workoutId).subscribe({
-      next: (workout) => {
-        this.selectedWorkout = workout;
-        this.workoutSelected = true;
+  // Get exercises FormArray
+  get exercises(): FormArray {
+    return this.workoutForm.get('exercises') as FormArray;
+  }
+
+  // Create an exercise form group
+  createExerciseFormGroup(exercise?: ExerciseLog): FormGroup {
+    const exerciseGroup = this.formBuilder.group({
+      exerciseId: [exercise?.exerciseId || ''],
+      name: [exercise?.name || '', Validators.required],
+      muscleGroup: [exercise?.muscleGroup || ''],
+      sets: this.formBuilder.array([])
+    });
+
+    // Add sets if available
+    const setsArray = exerciseGroup.get('sets') as FormArray;
+    if (exercise && exercise.sets && exercise.sets.length > 0) {
+      exercise.sets.forEach(set => {
+        setsArray.push(this.createSetFormGroup(set));
+      });
+    } else {
+      // Add default set if none provided
+      setsArray.push(this.createSetFormGroup());
+    }
+
+    return exerciseGroup;
+  }
+
+  // Create a set form group
+  createSetFormGroup(set?: ExerciseSet): FormGroup {
+    return this.formBuilder.group({
+      setNumber: [set?.setNumber || 1],
+      weight: [set?.weight || 0],
+      reps: [set?.reps || 0],
+      rpe: [set?.rpe || null],
+      completed: [set?.completed || false]
+    });
+  }
+
+  // Get sets FormArray for an exercise
+  getExerciseSets(exerciseIndex: number): FormArray {
+    return this.exercises.at(exerciseIndex).get('sets') as FormArray;
+  }
+
+  // Update workout form from store
+  updateWorkoutForm(workout: WorkoutSession): void {
+    // Reset exercise form array
+    while (this.exercises.length) {
+      this.exercises.removeAt(0);
+    }
+
+    // Update form values
+    this.workoutForm.patchValue({
+      name: workout.name,
+      notes: workout.notes,
+      templateId: workout.templateId
+    });
+
+    // Add exercises to form array
+    if (workout.exercises && workout.exercises.length > 0) {
+      workout.exercises.forEach(exercise => {
+        const exerciseFormGroup = this.createExerciseFormGroup(exercise);
+        this.exercises.push(exerciseFormGroup);
+      });
+    }
+  }
+
+  onTemplateSelected(template: WorkoutTemplate | null): void {
+    if (!template) return;
+
+    // Load full template with exercises
+    this.templateService.getTemplateWithExercises(template.id!).subscribe({
+      next: (fullTemplate) => {
+        // Initialize workout with template data
+        this.workoutStore.initializeWorkout({
+          name: fullTemplate.name,
+          startTime: new Date().toISOString(),
+          templateId: fullTemplate.id,
+          exercises: fullTemplate.exercises?.map(te => ({
+            exerciseId: te.exerciseId,
+            name: te.exerciseName,
+            muscleGroup: '',
+            sets: Array(te.sets).fill(0).map((_, i) => ({
+              setNumber: i + 1,
+              weight: te.weight,
+              reps: te.reps,
+              rpe: undefined,
+              completed: false
+            }))
+          })) || []
+        });
       },
       error: (error) => {
-        console.error('Error loading workout', error);
+        console.error('Error loading template details', error);
       }
     });
   }
 
+  // Modify addExercise method
+  addExercise(): void {
+    const newExercise: ExerciseLog = {
+      exerciseId: '',
+      name: 'New Exercise', // Ensure this default name is preserved
+      muscleGroup: '',
+      sets: [{
+        setNumber: 1,
+        weight: 0,
+        reps: 0,
+        rpe: undefined,
+        completed: false
+      }]
+    };
+
+    this.workoutStore.addExercise(newExercise);
+  }
+
+  // Remove an exercise
+  removeExercise(index: number): void {
+    this.workoutStore.removeExercise(index);
+  }
+
+  // Add a new set to an exercise
+  addSet(exerciseIndex: number): void {
+    const exerciseSets = this.getExerciseSets(exerciseIndex);
+    const exerciseForm = this.exercises.at(exerciseIndex);
+    const exerciseName = exerciseForm.get('name')?.value;
+    const lastSet = exerciseSets.at(exerciseSets.length - 1)?.value;
+
+    const newSet: ExerciseSet = {
+      setNumber: exerciseSets.length + 1,
+      weight: lastSet?.weight || 0,
+      reps: lastSet?.reps || 0,
+      rpe: undefined,
+      completed: false
+    };
+
+    // Add the set to the store
+    this.workoutStore.addSet({
+      exerciseIndex,
+      set: newSet
+    });
+
+    // Preserve the exercise name by setting it after a small delay
+    // This ensures the form has been updated by the store first
+    setTimeout(() => {
+      const updatedExerciseForm = this.exercises.at(exerciseIndex);
+      if (updatedExerciseForm && exerciseName) {
+        updatedExerciseForm.get('name')?.patchValue(exerciseName);
+      }
+    }, 0);
+  }
+
+  // Remove a set from an exercise
+  removeSet(exerciseIndex: number, setIndex: number): void {
+    this.workoutStore.removeSet({ exerciseIndex, setIndex });
+  }
+
+  // Exercise search
+  openExerciseSearch(): void {
+    // Before adding a new exercise, let's save the current state of existing exercises
+    const currentExercises = this.exercises.controls.map(control => ({
+      name: control.get('name')?.value,
+      muscleGroup: control.get('muscleGroup')?.value,
+      exerciseId: control.get('exerciseId')?.value
+    }));
+
+    // Add the new exercise
+    this.addExercise();
+
+    // After adding the exercise, restore the previous exercise names
+    setTimeout(() => {
+      // Skip the last exercise (the newly added one)
+      for (let i = 0; i < currentExercises.length; i++) {
+        const exerciseForm = this.exercises.at(i);
+        if (exerciseForm) {
+          exerciseForm.get('name')?.setValue(currentExercises[i].name);
+          exerciseForm.get('muscleGroup')?.setValue(currentExercises[i].muscleGroup);
+          exerciseForm.get('exerciseId')?.setValue(currentExercises[i].exerciseId);
+        }
+      }
+    }, 0);
+  }
+
+  // Save the diary entry and workout if applicable
   saveDiaryEntry(): void {
     if (this.diaryForm.invalid) return;
 
     this.loading = true;
 
     // Extract form values
-    const formValues = this.diaryForm.value;
+    const diaryFormValues = this.diaryForm.value;
 
-    // Convert Date object to ISO string format
-    const dateStr = formatDate(formValues.date, 'yyyy-MM-dd', 'en-US');
+    // Convert Date object to string format
+    const dateStr = diaryFormValues.date.toISOString().split('T')[0];
 
+    // Create the diary entry object
     const entry: DiaryEntry = {
       date: dateStr,
-      feeling: formValues.feeling,
-      notes: formValues.notes,
-      workoutPerformed: formValues.workoutPerformed,
-      workoutSessionId: formValues.workoutSessionId,
-      spotifyTrackId: formValues.spotifyTrackId,
-      spotifyTrackName: formValues.spotifyTrackName,
-      spotifyArtistName: formValues.spotifyArtistName
+      feeling: diaryFormValues.feeling,
+      notes: diaryFormValues.notes,
+      workoutPerformed: diaryFormValues.workoutPerformed,
+      spotifyTrackId: diaryFormValues.spotifyTrackId,
+      spotifyTrackName: diaryFormValues.spotifyTrackName,
+      spotifyArtistName: diaryFormValues.spotifyArtistName
     };
 
+    // If workout was performed, include the workout details
+    if (diaryFormValues.workoutPerformed) {
+      // Use the observable to get the current workout
+      this.workout$.subscribe(currentWorkout => {
+        if (currentWorkout) {
+          // Update the workout with form values
+          const workout: WorkoutSession = {
+            ...currentWorkout,
+            name: this.workoutForm.value.name,
+            notes: this.workoutForm.value.notes
+          };
+
+          // Update exercises from form
+          this.workoutForm.value.exercises.forEach((exerciseForm: any, index: number) => {
+            if (index < workout.exercises.length) {
+              workout.exercises[index] = {
+                ...workout.exercises[index],
+                name: exerciseForm.name,
+                muscleGroup: exerciseForm.muscleGroup,
+                sets: exerciseForm.sets.map((setForm: any) => ({
+                  setNumber: setForm.setNumber,
+                  weight: setForm.weight,
+                  reps: setForm.reps,
+                  rpe: setForm.rpe,
+                  completed: setForm.completed
+                }))
+              };
+            }
+          });
+
+          // Add the workout to the diary entry
+          entry.workout = workout;
+
+          // Now proceed with saving
+          this.saveEntry(entry);
+        } else {
+          // No workout data available
+          this.saveEntry(entry);
+        }
+      });
+    } else {
+      // No workout to include
+      this.saveEntry(entry);
+    }
+  }
+
+  // Helper method to save entry
+  private saveEntry(entry: DiaryEntry): void {
     if (this.isEdit && this.entryId) {
       // Update existing entry
       this.diaryService.updateDiaryEntry(this.entryId, entry).subscribe({
         next: () => {
           this.loading = false;
+          this.snackBar.open('Diary entry updated successfully', 'Close', { duration: 3000 });
           this.router.navigate(['/diary']);
         },
         error: (error) => {
           console.error('Error updating diary entry', error);
           this.loading = false;
+          this.snackBar.open('Error updating diary entry', 'Close', { duration: 3000 });
         }
       });
     } else {
@@ -154,41 +442,24 @@ export class DiaryEntryComponent implements OnInit{
       this.diaryService.createDiaryEntry(entry).subscribe({
         next: () => {
           this.loading = false;
+          this.snackBar.open('Diary entry created successfully', 'Close', { duration: 3000 });
           this.router.navigate(['/diary']);
         },
         error: (error) => {
           console.error('Error creating diary entry', error);
           this.loading = false;
+          this.snackBar.open('Error creating diary entry', 'Close', { duration: 3000 });
         }
       });
     }
   }
 
-  startNewWorkout(): void {
-    // This would navigate to workout creation
-    // For now, we'll implement a placeholder
-    alert('This feature will be implemented in the next phase');
+  get exerciseControls() {
+    return (this.exercises as FormArray).controls;
   }
 
-  openWorkoutSelector(): void {
-    // This would open a dialog to select from recent workouts
-    // For now, we'll implement a placeholder
-    alert('This feature will be implemented in the next phase');
-  }
-
-  viewWorkout(): void {
-    if (this.selectedWorkout && this.selectedWorkout.id) {
-      this.router.navigate(['/workouts', this.selectedWorkout.id]);
-    }
-  }
-
-  removeWorkout(): void {
-    this.workoutSelected = false;
-    this.selectedWorkout = undefined;
-    this.diaryForm.patchValue({
-      workoutSessionId: '',
-      workoutPerformed: false
-    });
+  getSetsControls(exerciseIndex: number) {
+    return (this.getExerciseSets(exerciseIndex) as FormArray).controls;
   }
 
 }

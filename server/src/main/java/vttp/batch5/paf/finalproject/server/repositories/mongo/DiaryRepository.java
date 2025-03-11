@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import vttp.batch5.paf.finalproject.server.models.DiaryEntry;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -19,6 +20,10 @@ public class DiaryRepository {
 
     // Create a new diary entry
     public DiaryEntry createDiaryEntry(DiaryEntry entry) {
+        // Set creation timestamp if not set
+        if (entry.getWorkoutSession() != null && entry.getWorkoutSession().getStartTime() == null) {
+            entry.getWorkoutSession().setStartTime(LocalDateTime.now());
+        }
         return mongoTemplate.insert(entry);
     }
 
@@ -57,16 +62,28 @@ public class DiaryRepository {
     // Update a diary entry
     public DiaryEntry updateDiaryEntry(DiaryEntry entry) {
         Query query = new Query(Criteria.where("id").is(entry.getId()));
+
+        // Create the update operation
         Update update = new Update()
+                .set("date", entry.getDate())
                 .set("feeling", entry.getFeeling())
                 .set("notes", entry.getNotes())
                 .set("workoutPerformed", entry.isWorkoutPerformed())
-                .set("workoutSessionId", entry.getWorkoutSessionId())
                 .set("spotifyTrackId", entry.getSpotifyTrackId())
                 .set("spotifyTrackName", entry.getSpotifyTrackName())
                 .set("spotifyArtistName", entry.getSpotifyArtistName());
 
+        // Set or unset workout based on workoutPerformed flag
+        if (entry.isWorkoutPerformed() && entry.getWorkoutSession() != null) {
+            update.set("workout", entry.getWorkoutSession());
+        } else if (!entry.isWorkoutPerformed()) {
+            update.unset("workout");
+        }
+
+        // Perform the update
         mongoTemplate.updateFirst(query, update, DiaryEntry.class);
+
+        // Return the updated entry
         return getDiaryEntryById(entry.getId());
     }
 
