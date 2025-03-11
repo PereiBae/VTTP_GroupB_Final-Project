@@ -21,7 +21,7 @@ import vttp.batch5.paf.finalproject.server.models.RegistrationRequest;
 import vttp.batch5.paf.finalproject.server.services.MyUserDetailsService;
 
 @Controller
-@RequestMapping("api")
+@RequestMapping("/api")
 public class LoginController {
 
     @Autowired
