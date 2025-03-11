@@ -1,0 +1,64 @@
+.profile-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  margin-bottom: 20px;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0;
+}
+
+.form-row {
+  margin-bottom: 20px;
+}
+
+.form-row-inline {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.form-row-inline mat-form-field {
+  flex: 1;
+  min-width: 120px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.user-email {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.subscription-status {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.status-badge.premium {
+  background-color: #ffd700;
+  color: #333;
+}
+
+.status-badge.standard {
+  background-color: #e0e0e0;
+  color: #333;
+}

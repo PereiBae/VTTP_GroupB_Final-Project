@@ -1,29 +1,34 @@
-import {inject, Injectable} from '@angular/core';
+import {Injectable} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {Exercise} from '../models/exercise';
+import {BaseService} from './base.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ExerciseAPIService {
+export class ExerciseAPIService extends BaseService{
 
-  private http = inject(HttpClient)
+  constructor(http: HttpClient) {
+    super(http);
+  }
 
   // Search exercises by name
   searchExercises(query: string): Observable<Exercise[]> {
     const params = new HttpParams().set('query', query);
-    return this.http.get<Exercise[]>('/api/exercises/search', { params });
+    return this.http.get<Exercise[]>('/api/exercises/search', { params, headers: this.getAuthHeaders() });
   }
 
-  // Get exercise by ID
-  getExerciseById(id: string): Observable<Exercise> {
-    return this.http.get<Exercise>(`/api/exercises/${id}`);
+  // Add to exercise-api.service.ts
+  getAllExercises(): Observable<Exercise[]> {
+    return this.http.get<Exercise[]>('/api/exercises', {
+      headers: this.getAuthHeaders()
+    });
   }
 
   // Get exercises by muscle group
   getExercisesByMuscle(muscle: string): Observable<Exercise[]> {
-    return this.http.get<Exercise[]>(`/api/exercises/muscle/${muscle}`);
+    return this.http.get<Exercise[]>(`/api/exercises/muscle/${muscle}`, {headers: this.getAuthHeaders()});
   }
 
 }

@@ -32,8 +32,11 @@ export class LoginComponent implements OnInit {
     const p:string = this.form.value.password;
     this.loginSvc.login(e, p).subscribe({
       next: (response) => {
+        console.log('Login response:', response);
+        console.log('Token received:', response.token);
         // Save token (for example, in localStorage)
         localStorage.setItem('jwt', response.token);
+        console.log('Token stored in localStorage:', localStorage.getItem('jwt'));
         // Navigate to a protected page after login
         this.router.navigate(['/dashboard']);
       },

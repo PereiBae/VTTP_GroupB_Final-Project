@@ -1,1 +1,44 @@
-<p>template-list works!</p>
+<div class="template-container">
+  <div class="header">
+    <h1>Your Workout Templates</h1>
+    <button mat-raised-button color="primary" routerLink="/templates/new">
+      <mat-icon>add</mat-icon>
+      New Template
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="loading-spinner">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading && templates.length === 0" class="no-templates">
+    <mat-icon>playlist_add</mat-icon>
+    <p>No templates found.</p>
+    <button mat-raised-button color="primary" routerLink="/templates/new">Create Your First Template</button>
+  </div>
+
+  <div *ngIf="!loading && templates.length > 0" class="template-list">
+    <mat-card *ngFor="let template of templates" class="template-card">
+      <mat-card-header>
+        <div mat-card-avatar>
+          <mat-icon>fitness_center</mat-icon>
+        </div>
+        <mat-card-title>{{ template.name }}</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p>{{ template.description || 'No description' }}</p>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button [routerLink]="['/templates', template.id]">
+          EDIT
+        </button>
+        <button mat-button (click)="startWorkoutFromTemplate(template)">
+          START WORKOUT
+        </button>
+        <button mat-icon-button color="warn" (click)="deleteTemplate(template)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

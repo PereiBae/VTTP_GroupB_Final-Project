@@ -1,39 +1,53 @@
-import {Component, inject, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {FormArray, FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {WorkoutService} from '../../../services/workout.service';
 import {TemplateService} from '../../../services/template.service';
 import {ActivatedRoute, Router} from '@angular/router';
-import {ExerciseAPIService} from '../../../services/exercise-api.service';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatDialog} from '@angular/material/dialog';
 import {WorkoutTemplate} from '../../../models/workout-template';
 import {WorkoutSession} from '../../../models/workout-session';
 import {ExerciseLog, ExerciseSet} from '../../../models/exercise-log';
+import {WorkoutStore} from '../../../stores/workout.store';
+import {Observable, Subject, takeUntil} from 'rxjs';
 
 @Component({
   selector: 'app-workout-session',
   standalone: false,
   templateUrl: './workout-session.component.html',
-  styleUrl: './workout-session.component.css'
+  styleUrl: './workout-session.component.css',
+  providers: [WorkoutStore]
 })
-export class WorkoutSessionComponent implements OnInit{
-
-  private formBuilder = inject(FormBuilder)
-  private workoutService = inject(WorkoutService)
-  private templateService = inject(TemplateService)
-  private exerciseAPIService = inject(ExerciseAPIService)
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
-  private dialog = inject(MatDialog);
-  private snackBar = inject(MatSnackBar);
+export class WorkoutSessionComponent implements OnInit, OnDestroy{
 
   workoutForm!: FormGroup;
   isEdit = false;
   workoutId?: string;
-  loading = false;
   hasEndTime = false;
-
   templates: WorkoutTemplate[] = [];
+
+  // ComponentStore selectors
+  workout$: Observable<WorkoutSession | null>;
+  loading$: Observable<boolean>;
+  error$: Observable<string | null>;
+
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private formBuilder: FormBuilder,
+    private workoutService: WorkoutService,
+    private workoutStore: WorkoutStore,
+    private templateService: TemplateService,
+    private route: ActivatedRoute,
+    private router: Router,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
+  ) {
+    // Initialize observables from store
+    this.workout$ = this.workoutStore.currentWorkout$;
+    this.loading$ = this.workoutStore.loading$;
+    this.error$ = this.workoutStore.error$;
+  }
 
   ngOnInit() {
     this.createForm();
@@ -43,14 +57,40 @@ export class WorkoutSessionComponent implements OnInit{
     this.isEdit = !!this.workoutId;
 
     if (this.isEdit && this.workoutId) {
-      this.loadWorkout(this.workoutId);
+      // Load existing workout using the store
+      this.workoutStore.loadWorkout(this.workoutId);
     } else {
-      // Set default start time to now for new workouts
-      this.workoutForm.patchValue({
-        startTime: new Date(),
-        name: 'My Workout'
+      // Initialize new workout using the store
+      this.workoutStore.initializeWorkout({
+        name: 'My Workout',
+        startTime: new Date().toISOString(),
+        exercises: []
       });
     }
+
+    // Subscribe to workout changes from the store
+    this.workout$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(workout => {
+      if (workout) {
+        this.updateFormFromWorkout(workout);
+        this.hasEndTime = !!workout.endTime;
+      }
+    });
+
+    // Subscribe to error messages
+    this.error$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(error => {
+      if (error) {
+        this.snackBar.open(error, 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   createForm(): void {
@@ -71,91 +111,63 @@ export class WorkoutSessionComponent implements OnInit{
       },
       error: (error) => {
         console.error('Error loading templates', error);
+        this.snackBar.open('Error loading templates', 'Close', { duration: 3000 });
       }
     });
   }
 
-  loadWorkout(id: string): void {
-    this.loading = true;
-    this.workoutService.getWorkoutSessionById(id).subscribe({
-      next: (workout) => {
-        // Reset exercise form array
-        while (this.exercises.length) {
-          this.exercises.removeAt(0);
-        }
+  updateFormFromWorkout(workout: WorkoutSession): void {
+    // Reset exercise form array
+    while (this.exercises.length) {
+      this.exercises.removeAt(0);
+    }
 
-        // Patch basic workout details
-        this.workoutForm.patchValue({
-          name: workout.name,
-          startTime: new Date(workout.startTime),
-          endTime: workout.endTime ? new Date(workout.endTime) : null,
-          templateId: workout.templateId,
-          notes: workout.notes
-        });
-
-        this.hasEndTime = !!workout.endTime;
-
-        // Add exercises to form array
-        if (workout.exercises && workout.exercises.length > 0) {
-          workout.exercises.forEach(exercise => {
-            const exerciseFormGroup = this.createExerciseFormGroup(exercise);
-            this.exercises.push(exerciseFormGroup);
-          });
-        }
-
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading workout', error);
-        this.loading = false;
-      }
+    // Patch basic workout details
+    this.workoutForm.patchValue({
+      name: workout.name,
+      startTime: workout.startTime ? new Date(workout.startTime) : new Date(),
+      endTime: workout.endTime ? new Date(workout.endTime) : null,
+      templateId: workout.templateId,
+      notes: workout.notes
     });
+
+    // Add exercises to form array
+    if (workout.exercises && workout.exercises.length > 0) {
+      workout.exercises.forEach(exercise => {
+        const exerciseFormGroup = this.createExerciseFormGroup(exercise);
+        this.exercises.push(exerciseFormGroup);
+      });
+    }
   }
 
   onTemplateSelected(template: WorkoutTemplate | null): void {
     if (!template) return;
 
-    // Update workout name
-    this.workoutForm.patchValue({
-      name: template.name,
-      templateId: template.id
-    });
-
-    // Clear existing exercises
-    while (this.exercises.length) {
-      this.exercises.removeAt(0);
-    }
-
     // Load full template with exercises
     this.templateService.getTemplateWithExercises(template.id!).subscribe({
       next: (fullTemplate) => {
-        if (fullTemplate.exercises && fullTemplate.exercises.length > 0) {
-          fullTemplate.exercises.forEach(templateExercise => {
-            // Create exercise form group
-            const exercise: ExerciseLog = {
-              exerciseId: templateExercise.exerciseId,
-              name: templateExercise.exerciseName,
-              muscleGroup: '',
-              sets: []
-            };
-
-            // Add sets based on template
-            for (let i = 0; i < templateExercise.sets; i++) {
-              exercise.sets.push({
-                setNumber: i + 1,
-                weight: templateExercise.weight,
-                reps: templateExercise.reps,
-                completed: false
-              });
-            }
-
-            const exerciseFormGroup = this.createExerciseFormGroup(exercise);
-            this.exercises.push(exerciseFormGroup);
-          });
-        }
+        // Initialize workout with template data in the store
+        this.workoutStore.initializeWorkout({
+          name: template.name,
+          startTime: new Date().toISOString(),
+          templateId: template.id,
+          exercises: fullTemplate.exercises?.map(te => ({
+            exerciseId: te.exerciseId,
+            name: te.exerciseName,
+            muscleGroup: '',
+            sets: Array(te.sets).fill(0).map((_, i) => ({
+              setNumber: i + 1,
+              weight: te.weight,
+              reps: te.reps,
+              rpe: undefined,
+              completed: false
+            }))
+          })) || []
+        });
       },
       error: (error) => {
         console.error('Error loading template details', error);
+        this.snackBar.open('Error loading template details', 'Close', { duration: 3000 });
       }
     });
   }
@@ -211,37 +223,43 @@ export class WorkoutSessionComponent implements OnInit{
   }
 
   addExercise(): void {
-    this.exercises.push(this.createExerciseFormGroup());
+    const newExercise: ExerciseLog = {
+      exerciseId: '',
+      name: 'New Exercise',
+      muscleGroup: '',
+      sets: [{
+        setNumber: 1,
+        weight: 0,
+        reps: 0,
+        rpe: undefined,
+        completed: false
+      }]
+    };
+
+    this.workoutStore.addExercise(newExercise);
   }
 
   removeExercise(index: number): void {
-    this.exercises.removeAt(index);
+    this.workoutStore.removeExercise(index);
   }
 
   addSet(exerciseIndex: number): void {
-    const sets = this.getExerciseSets(exerciseIndex);
-    const lastSet = sets.at(sets.length - 1)?.value;
+    const exerciseSets = this.getExerciseSets(exerciseIndex);
+    const lastSet = exerciseSets.at(exerciseSets.length - 1)?.value;
 
-    // Create new set based on the last one
-    const newSet = this.createSetFormGroup({
-      setNumber: sets.length + 1,
+    const newSet: ExerciseSet = {
+      setNumber: exerciseSets.length + 1,
       weight: lastSet?.weight || 0,
       reps: lastSet?.reps || 0,
-      rpe: 0,
+      rpe: undefined,
       completed: false
-    });
+    };
 
-    sets.push(newSet);
+    this.workoutStore.addSet({ exerciseIndex, set: newSet });
   }
 
   removeSet(exerciseIndex: number, setIndex: number): void {
-    const sets = this.getExerciseSets(exerciseIndex);
-    sets.removeAt(setIndex);
-
-    // Update set numbers for remaining sets
-    for (let i = 0; i < sets.length; i++) {
-      sets.at(i).get('setNumber')?.setValue(i + 1);
-    }
+    this.workoutStore.removeSet({ exerciseIndex, setIndex });
   }
 
   openExerciseSearch(): void {
@@ -253,89 +271,77 @@ export class WorkoutSessionComponent implements OnInit{
   saveWorkout(): void {
     if (this.workoutForm.invalid) return;
 
-    this.loading = true;
-
+    // Update the workout in the store with form values
     const formValue = this.workoutForm.value;
 
-    // Format dates as ISO strings
-    const startTimeStr = formValue.startTime.toISOString();
-    const endTimeStr = formValue.endTime ? formValue.endTime.toISOString() : null;
-
-    // Map form data to model
-    const workout: WorkoutSession = {
+    // First, update basic workout details
+    this.workoutStore.updateWorkoutDetails({
       name: formValue.name,
-      startTime: startTimeStr,
-      endTime: endTimeStr,
-      templateId: formValue.templateId,
+      startTime: formValue.startTime?.toISOString(),
+      endTime: formValue.endTime?.toISOString(),
       notes: formValue.notes,
-      exercises: formValue.exercises.map((ex: any) => ({
-        exerciseId: ex.exerciseId,
-        name: ex.name,
-        muscleGroup: ex.muscleGroup,
-        sets: ex.sets.map((set: any) => ({
-          setNumber: set.setNumber,
-          weight: set.weight,
-          reps: set.reps,
-          rpe: set.rpe,
-          completed: set.completed
-        }))
-      }))
-    };
+      templateId: formValue.templateId
+    });
 
-    if (this.isEdit && this.workoutId) {
-      // Update existing workout
-      this.workoutService.updateWorkoutSession(this.workoutId, workout).subscribe({
-        next: () => {
-          this.loading = false;
-          this.snackBar.open('Workout updated successfully', 'Close', { duration: 3000 });
-          this.router.navigate(['/workouts']);
-        },
-        error: (error) => {
-          console.error('Error updating workout', error);
-          this.loading = false;
-          this.snackBar.open('Error updating workout', 'Close', { duration: 3000 });
+    // Then update each exercise from the form
+    formValue.exercises.forEach((exerciseForm: any, index: number) => {
+      this.workoutStore.updateExercise({
+        index,
+        exercise: {
+          exerciseId: exerciseForm.exerciseId,
+          name: exerciseForm.name,
+          muscleGroup: exerciseForm.muscleGroup,
+          sets: exerciseForm.sets.map((setForm: any) => ({
+            setNumber: setForm.setNumber,
+            weight: setForm.weight,
+            reps: setForm.reps,
+            rpe: setForm.rpe,
+            completed: setForm.completed
+          }))
         }
       });
-    } else {
-      // Create new workout
-      this.workoutService.createWorkoutSession(workout).subscribe({
-        next: (createdWorkout) => {
-          this.loading = false;
-          this.snackBar.open('Workout started successfully', 'Close', { duration: 3000 });
-          this.router.navigate(['/workouts', createdWorkout.id]);
-        },
-        error: (error) => {
-          console.error('Error creating workout', error);
-          this.loading = false;
-          this.snackBar.open('Error starting workout', 'Close', { duration: 3000 });
-        }
-      });
-    }
+    });
+
+    // Save the workout
+    this.workoutStore.saveWorkout();
+
+    // Navigate back after save
+    setTimeout(() => {
+      this.router.navigate(['/workouts']);
+    }, 500);
   }
 
   finishWorkout(): void {
-    // Set end time to now
-    this.workoutForm.patchValue({
-      endTime: new Date()
+    // Update the form data first
+    if (this.workoutForm.invalid) return;
+
+    const formValue = this.workoutForm.value;
+
+    // Update workout details before finishing
+    this.workoutStore.updateWorkoutDetails({
+      name: formValue.name,
+      notes: formValue.notes
     });
 
-    this.hasEndTime = true;
-    this.saveWorkout();
+    // Finish workout (sets end time and saves)
+    this.workoutStore.finishWorkout();
+
+    // Navigate back to workouts list
+    setTimeout(() => {
+      this.router.navigate(['/workouts']);
+    }, 500);
   }
 
   deleteWorkout(): void {
     if (!this.workoutId || !confirm('Are you sure you want to delete this workout?')) return;
 
-    this.loading = true;
     this.workoutService.deleteWorkoutSession(this.workoutId).subscribe({
       next: () => {
-        this.loading = false;
         this.snackBar.open('Workout deleted successfully', 'Close', { duration: 3000 });
         this.router.navigate(['/workouts']);
       },
       error: (error) => {
         console.error('Error deleting workout', error);
-        this.loading = false;
         this.snackBar.open('Error deleting workout', 'Close', { duration: 3000 });
       }
     });

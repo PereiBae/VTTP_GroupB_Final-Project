@@ -64,4 +64,21 @@ public class ExerciseAPIService {
         return response.getBody();
     }
 
+    public List<Map<String,Object>> getAllExercises() {
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-Api-Key", apiKey);
+
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString("https://api.api-ninjas.com/v1/exercises");
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<List> response = restTemplate.exchange(
+                builder.toUriString(),
+                HttpMethod.GET,
+                entity,
+                List.class
+        );
+        return response.getBody();
+    }
+
 }

@@ -1,0 +1,47 @@
+.template-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0;
+}
+
+.no-templates {
+  text-align: center;
+  margin: 40px 0;
+  color: #666;
+}
+
+.no-templates mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+}
+
+.template-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.template-card {
+  width: 300px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.template-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}

@@ -2,13 +2,16 @@ import {inject, Injectable} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {NutritionLog} from '../models/nutrition-log';
+import {BaseService} from "./base.service";
 
 @Injectable({
   providedIn: 'root'
 })
-export class NutritionService {
+export class NutritionService extends BaseService{
 
-  private http = inject(HttpClient)
+  constructor(http: HttpClient) {
+    super(http);
+  }
 
   // Get all nutrition logs for the current user
   getNutritionLogs(): Observable<NutritionLog[]> {
@@ -21,32 +24,32 @@ export class NutritionService {
       .set('start', startDate)
       .set('end', endDate);
 
-    return this.http.get<NutritionLog[]>('/api/nutrition/range', { params });
+    return this.http.get<NutritionLog[]>('/api/nutrition/range', { params, headers:this.getAuthHeaders()});
   }
 
   // Get nutrition log by date
   getNutritionLogByDate(date: string): Observable<NutritionLog> {
-    return this.http.get<NutritionLog>(`/api/nutrition/date/${date}`);
+    return this.http.get<NutritionLog>(`/api/nutrition/date/${date}`, {headers:this.getAuthHeaders()});
   }
 
   // Get nutrition log by ID
   getNutritionLogById(id: string): Observable<NutritionLog> {
-    return this.http.get<NutritionLog>(`/api/nutrition/${id}`);
+    return this.http.get<NutritionLog>(`/api/nutrition/${id}`, {headers:this.getAuthHeaders()});
   }
 
   // Create a new nutrition log
   createNutritionLog(log: NutritionLog): Observable<NutritionLog> {
-    return this.http.post<NutritionLog>('/api/nutrition', log);
+    return this.http.post<NutritionLog>('/api/nutrition', log, {headers:this.getAuthHeaders()});
   }
 
   // Update a nutrition log
   updateNutritionLog(id: string, log: NutritionLog): Observable<NutritionLog> {
-    return this.http.put<NutritionLog>(`/api/nutrition/${id}`, log);
+    return this.http.put<NutritionLog>(`/api/nutrition/${id}`, log, {headers:this.getAuthHeaders()});
   }
 
   // Delete a nutrition log
   deleteNutritionLog(id: string): Observable<void> {
-    return this.http.delete<void>(`/api/nutrition/${id}`);
+    return this.http.delete<void>(`/api/nutrition/${id}`, {headers:this.getAuthHeaders()});
   }
 
 }

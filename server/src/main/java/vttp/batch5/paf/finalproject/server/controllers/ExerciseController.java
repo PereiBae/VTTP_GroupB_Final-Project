@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import vttp.batch5.paf.finalproject.server.services.ExerciseAPIService;
+import vttp.batch5.paf.finalproject.server.services.ExerciseGitService;
 
 import java.util.List;
 import java.util.Map;
@@ -14,7 +15,15 @@ import java.util.Map;
 public class ExerciseController {
 
     @Autowired
-    private ExerciseAPIService exerciseAPISvc;
+    private ExerciseGitService exerciseAPISvc;
+
+    // Add this new method to get all exercises
+    @GetMapping
+    public ResponseEntity<List<Map<String, Object>>> getAllExercises() {
+        List<Map<String, Object>> exercises = exerciseAPISvc.getAllExercises();
+        return ResponseEntity.ok(exercises);
+    }
+
 
     // Search exercises by name
     @GetMapping("/search")

@@ -10,6 +10,7 @@ import vttp.batch5.paf.finalproject.server.models.WorkoutSession;
 import vttp.batch5.paf.finalproject.server.repositories.mongo.WorkoutRepository;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Controller
@@ -45,12 +46,16 @@ public class WorkoutController {
     @GetMapping("/range")
     @ResponseBody
     public ResponseEntity<List<WorkoutSession>> getWorkoutSessionsInRange(
-            @RequestParam LocalDateTime start,
-            @RequestParam LocalDateTime end,
+            @RequestParam String start,
+            @RequestParam String end,
             Authentication authentication) {
 
+        // Convert String to LocalDateTime
+        LocalDateTime startDateTime = LocalDateTime.parse(start, DateTimeFormatter.ISO_DATE_TIME);
+        LocalDateTime endDateTime = LocalDateTime.parse(end, DateTimeFormatter.ISO_DATE_TIME);
+
         List<WorkoutSession> sessions = workoutRepo.getWorkoutSessionsByUserAndDateRange(
-                authentication.getName(), start, end);
+                authentication.getName(), startDateTime, endDateTime);
         return ResponseEntity.ok(sessions);
     }
 

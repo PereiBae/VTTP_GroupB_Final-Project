@@ -1,0 +1,67 @@
+.template-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0;
+}
+
+.form-row {
+  margin-bottom: 20px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.no-exercises {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.exercise-form {
+  padding: 16px 0;
+}
+
+.exercise-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.exercise-header mat-form-field {
+  flex: 1;
+  margin-right: 16px;
+}
+
+.exercise-settings {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.add-exercise {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+mat-expansion-panel {
+  margin-bottom: 16px;
+}

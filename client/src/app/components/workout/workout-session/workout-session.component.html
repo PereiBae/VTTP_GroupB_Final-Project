@@ -170,7 +170,7 @@
         <button mat-raised-button color="accent" type="button" *ngIf="isEdit && !hasEndTime" (click)="finishWorkout()">
           FINISH WORKOUT
         </button>
-        <button mat-raised-button color="primary" type="button" (click)="saveWorkout()" [disabled]="workoutForm.invalid || loading">
+        <button mat-raised-button color="primary" type="button" (click)="saveWorkout()" [disabled]="workoutForm.invalid || loading$">
           {{ isEdit ? 'UPDATE' : 'START' }}
         </button>
       </mat-card-actions>

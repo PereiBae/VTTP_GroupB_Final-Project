@@ -1,1 +1,101 @@
-<p>template-form works!</p>
+<div class="template-container">
+  <div class="header">
+    <h1>{{ isEdit ? 'Edit Template' : 'Create Workout Template' }}</h1>
+    <button mat-icon-button routerLink="/templates">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="loading-spinner">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <form [formGroup]="templateForm" (ngSubmit)="saveTemplate()" *ngIf="!loading">
+    <mat-card>
+      <mat-card-content>
+        <div class="form-row">
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Template Name</mat-label>
+            <input matInput formControlName="name" required>
+            <mat-error *ngIf="templateForm.get('name')?.hasError('required')">
+              Template name is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Description</mat-label>
+            <textarea matInput formControlName="description" rows="3"></textarea>
+          </mat-form-field>
+        </div>
+
+        <h3>Exercises</h3>
+
+        <div *ngIf="exercises.length === 0" class="no-exercises">
+          <p>No exercises added yet.</p>
+        </div>
+
+        <div formArrayName="exercises">
+          <mat-accordion>
+            <mat-expansion-panel *ngFor="let exercise of exercises.controls; let i = index" [formGroupName]="i">
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  {{ exercise.get('exerciseName')?.value || 'New Exercise' }}
+                </mat-panel-title>
+                <mat-panel-description>
+                  {{ exercise.get('sets')?.value }} sets × {{ exercise.get('reps')?.value }} reps
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+
+              <div class="exercise-form">
+                <div class="exercise-header">
+                  <mat-form-field appearance="fill">
+                    <mat-label>Exercise</mat-label>
+                    <input matInput formControlName="exerciseName" required>
+                  </mat-form-field>
+
+                  <button mat-icon-button color="warn" type="button" (click)="removeExercise(i)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+
+                <div class="exercise-settings">
+                  <mat-form-field appearance="fill">
+                    <mat-label>Sets</mat-label>
+                    <input matInput type="number" formControlName="sets" min="1" max="10">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="fill">
+                    <mat-label>Reps</mat-label>
+                    <input matInput type="number" formControlName="reps" min="1" max="100">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="fill">
+                    <mat-label>Weight (kg)</mat-label>
+                    <input matInput type="number" formControlName="weight" min="0" step="2.5">
+                  </mat-form-field>
+                </div>
+              </div>
+            </mat-expansion-panel>
+          </mat-accordion>
+        </div>
+
+        <div class="add-exercise">
+          <button mat-raised-button color="primary" type="button" (click)="openExerciseSearch()">
+            <mat-icon>add</mat-icon> Add Exercise
+          </button>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <button mat-button type="button" routerLink="/templates">
+          CANCEL
+        </button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="templateForm.invalid || saving">
+          {{ isEdit ? 'UPDATE' : 'SAVE' }}
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </form>
+</div>
