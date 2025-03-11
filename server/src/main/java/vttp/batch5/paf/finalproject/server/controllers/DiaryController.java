@@ -7,7 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import vttp.batch5.paf.finalproject.server.models.DiaryEntry;
-import vttp.batch5.paf.finalproject.server.repositories.DiaryRepository;
+import vttp.batch5.paf.finalproject.server.repositories.mongo.DiaryRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -75,6 +75,7 @@ public class DiaryController {
 
     // Get a specific diary entry by ID
     @GetMapping("/{id}")
+    @ResponseBody
     public ResponseEntity<DiaryEntry> getDiaryEntryById(@PathVariable String id, Authentication authentication) {
         DiaryEntry entry = diaryRepo.getDiaryEntryById(id);
 
@@ -92,6 +93,7 @@ public class DiaryController {
 
     // Update a diary entry
     @PutMapping("/{id}")
+    @ResponseBody
     public ResponseEntity<DiaryEntry> updateDiaryEntry(
             @PathVariable String id,
             @RequestBody DiaryEntry entry,
@@ -119,6 +121,7 @@ public class DiaryController {
 
     // Delete a diary entry
     @DeleteMapping("/{id}")
+    @ResponseBody
     public ResponseEntity<Void> deleteDiaryEntry(@PathVariable String id, Authentication authentication) {
         DiaryEntry existing = diaryRepo.getDiaryEntryById(id);
 

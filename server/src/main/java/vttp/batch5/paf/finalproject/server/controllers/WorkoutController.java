@@ -7,7 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import vttp.batch5.paf.finalproject.server.models.WorkoutSession;
-import vttp.batch5.paf.finalproject.server.repositories.WorkoutRepository;
+import vttp.batch5.paf.finalproject.server.repositories.mongo.WorkoutRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,6 +21,7 @@ public class WorkoutController {
 
     // Create a new workout session
     @PostMapping
+    @ResponseBody
     public ResponseEntity<WorkoutSession> createWorkoutSession(
             @RequestBody WorkoutSession session,
             Authentication authentication) {
@@ -34,6 +35,7 @@ public class WorkoutController {
 
     // Get all workout sessions for the authenticated user
     @GetMapping
+    @ResponseBody
     public ResponseEntity<List<WorkoutSession>> getUserWorkoutSessions(Authentication authentication) {
         List<WorkoutSession> sessions = workoutRepo.getWorkoutSessionsByUser(authentication.getName());
         return ResponseEntity.ok(sessions);
@@ -41,6 +43,7 @@ public class WorkoutController {
 
     // Get workout sessions within a date range
     @GetMapping("/range")
+    @ResponseBody
     public ResponseEntity<List<WorkoutSession>> getWorkoutSessionsInRange(
             @RequestParam LocalDateTime start,
             @RequestParam LocalDateTime end,
@@ -53,6 +56,7 @@ public class WorkoutController {
 
     // Get workout sessions by template
     @GetMapping("/template/{templateId}")
+    @ResponseBody
     public ResponseEntity<List<WorkoutSession>> getWorkoutSessionsByTemplate(
             @PathVariable Integer templateId,
             Authentication authentication) {
@@ -64,6 +68,7 @@ public class WorkoutController {
 
     // Get a specific workout session by ID
     @GetMapping("/{id}")
+    @ResponseBody
     public ResponseEntity<WorkoutSession> getWorkoutSessionById(
             @PathVariable String id,
             Authentication authentication) {
@@ -84,6 +89,7 @@ public class WorkoutController {
 
     // Update a workout session
     @PutMapping("/{id}")
+    @ResponseBody
     public ResponseEntity<WorkoutSession> updateWorkoutSession(
             @PathVariable String id,
             @RequestBody WorkoutSession session,
@@ -113,6 +119,7 @@ public class WorkoutController {
 
     // Delete a workout session
     @DeleteMapping("/{id}")
+    @ResponseBody
     public ResponseEntity<Void> deleteWorkoutSession(
             @PathVariable String id,
             Authentication authentication) {

@@ -1,0 +1,64 @@
+<div class="diary-container">
+  <div class="header">
+    <h1>Your Diary Entries</h1>
+    <button mat-raised-button color="primary" routerLink="/diary/new">
+      <mat-icon>add</mat-icon>
+      New Entry
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <mat-form-field appearance="fill" class="date-range">
+        <mat-label>Date range</mat-label>
+        <mat-date-range-input [rangePicker]="picker">
+          <input matStartDate placeholder="Start date" [(ngModel)]="startDate">
+          <input matEndDate placeholder="End date" [(ngModel)]="endDate">
+        </mat-date-range-input>
+        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-date-range-picker #picker></mat-date-range-picker>
+      </mat-form-field>
+
+      <button mat-raised-button color="accent" (click)="loadDiaryEntries()">
+        Filter
+      </button>
+    </mat-card-content>
+  </mat-card>
+
+  <div *ngIf="loading" class="loading-spinner">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading && diaryEntries.length === 0" class="no-entries">
+    <mat-icon>book</mat-icon>
+    <p>No diary entries found for the selected period.</p>
+    <button mat-raised-button color="primary" routerLink="/diary/new">Create Your First Entry</button>
+  </div>
+
+  <div *ngIf="!loading && diaryEntries.length > 0" class="diary-entries">
+    <mat-card *ngFor="let entry of diaryEntries" class="diary-entry-card" [routerLink]="['/diary', entry.id]">
+      <mat-card-header>
+        <div mat-card-avatar>
+          <mat-icon [ngClass]="'feeling-' + entry.feeling">{{ getEmotionIcon(entry.feeling) }}</mat-icon>
+        </div>
+        <mat-card-title>{{ entry.date | date:'fullDate' }}</mat-card-title>
+        <mat-card-subtitle>
+          <span *ngIf="entry.workoutPerformed">Worked out</span>
+          <span *ngIf="!entry.workoutPerformed">Rest day</span>
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>{{ entry.notes | slice:0:150 }}{{ entry.notes.length > 150 ? '...' : '' }}</p>
+
+        <div *ngIf="entry.spotifyTrackName" class="spotify-track">
+          <mat-icon>music_note</mat-icon>
+          <span>{{ entry.spotifyTrackName }} by {{ entry.spotifyArtistName }}</span>
+        </div>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button [routerLink]="['/diary', entry.id]">VIEW</button>
+        <button mat-button *ngIf="entry.workoutPerformed" [routerLink]="['/workouts', entry.workoutSessionId]">VIEW WORKOUT</button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

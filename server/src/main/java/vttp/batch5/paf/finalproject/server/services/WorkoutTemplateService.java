@@ -5,8 +5,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vttp.batch5.paf.finalproject.server.models.TemplateExercise;
 import vttp.batch5.paf.finalproject.server.models.WorkoutTemplate;
-import vttp.batch5.paf.finalproject.server.repositories.TemplateExerciseRepository;
-import vttp.batch5.paf.finalproject.server.repositories.WorkoutTemplateRepository;
+import vttp.batch5.paf.finalproject.server.repositories.mysql.TemplateExerciseRepository;
+import vttp.batch5.paf.finalproject.server.repositories.mysql.WorkoutTemplateRepository;
 
 import java.util.List;
 

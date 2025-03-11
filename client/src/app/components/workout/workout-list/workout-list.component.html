@@ -1,0 +1,76 @@
+<div class="workout-container">
+  <div class="header">
+    <h1>Your Workouts</h1>
+    <button mat-raised-button color="primary" routerLink="/workouts/new">
+      <mat-icon>add</mat-icon>
+      New Workout
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <mat-form-field appearance="fill" class="date-range">
+        <mat-label>Date range</mat-label>
+        <mat-date-range-input [rangePicker]="picker">
+          <input matStartDate placeholder="Start date" [(ngModel)]="startDate">
+          <input matEndDate placeholder="End date" [(ngModel)]="endDate">
+        </mat-date-range-input>
+        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-date-range-picker #picker></mat-date-range-picker>
+      </mat-form-field>
+
+      <button mat-raised-button color="accent" (click)="loadWorkouts()">
+        Filter
+      </button>
+    </mat-card-content>
+  </mat-card>
+
+  <div *ngIf="loading" class="loading-spinner">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading && workouts.length === 0" class="no-workouts">
+    <mat-icon>fitness_center</mat-icon>
+    <p>No workouts found for the selected period.</p>
+    <button mat-raised-button color="primary" routerLink="/workouts/new">Start Your First Workout</button>
+  </div>
+
+  <div *ngIf="!loading && workouts.length > 0" class="workout-list">
+    <mat-card *ngFor="let workout of workouts" class="workout-card" [routerLink]="['/workouts', workout.id]">
+      <mat-card-header>
+        <div mat-card-avatar>
+          <mat-icon>fitness_center</mat-icon>
+        </div>
+        <mat-card-title>{{ workout.name }}</mat-card-title>
+        <mat-card-subtitle>
+          {{ workout.startTime | date:'medium' }}
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="workout-stats">
+          <div class="stat">
+            <span class="value">{{ workout.exercises.length }}</span>
+            <span class="label">Exercises</span>
+          </div>
+          <div class="stat">
+            <span class="value">{{ getTotalSets(workout) }}</span>
+            <span class="label">Sets</span>
+          </div>
+          <div class="stat">
+            <span class="value">{{ workout.endTime ? getDuration(workout) : 'In Progress' }}</span>
+            <span class="label">Duration</span>
+          </div>
+        </div>
+
+        <div class="exercise-preview">
+          <span *ngFor="let exercise of workout.exercises.slice(0, 3)">
+            {{ exercise.name }}
+          </span>
+          <span *ngIf="workout.exercises.length > 3">
+            +{{ workout.exercises.length - 3 }} more
+          </span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

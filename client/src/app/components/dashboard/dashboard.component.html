@@ -1,1 +1,89 @@
-<p>dashboard works!</p>
+<div class="dashboard-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Gym Diary Dashboard</mat-card-title>
+      <mat-card-subtitle>Welcome to your fitness journey!</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="dashboard-summary">
+        <div class="dashboard-section">
+          <h2>Recent Diary Entries</h2>
+          <mat-list *ngIf="recentEntries.length > 0; else noDiaryEntries">
+            <mat-list-item *ngFor="let entry of recentEntries">
+              <div matListItemTitle>
+                {{ entry.date | date:'mediumDate' }}
+              </div>
+              <div matListItemLine>
+                <mat-icon [ngClass]="'feeling-' + entry.feeling">
+                  {{ getEmotionIcon(entry.feeling) }}
+                </mat-icon>
+                {{ entry.workoutPerformed ? 'Worked out' : 'Rest day' }}
+              </div>
+              <button mat-icon-button [routerLink]="['/diary', entry.id]">
+                <mat-icon>navigate_next</mat-icon>
+              </button>
+            </mat-list-item>
+          </mat-list>
+          <ng-template #noDiaryEntries>
+            <p>No recent diary entries.</p>
+          </ng-template>
+          <button mat-raised-button color="primary" routerLink="/diary/new">
+            Add New Entry
+          </button>
+        </div>
+
+        <div class="dashboard-section">
+          <h2>Recent Workouts</h2>
+          <mat-list *ngIf="recentWorkouts.length > 0; else noWorkouts">
+            <mat-list-item *ngFor="let workout of recentWorkouts">
+              <div matListItemTitle>
+                {{ workout.name }}
+              </div>
+              <div matListItemLine>
+                {{ workout.startTime | date:'medium' }}
+              </div>
+              <div matListItemLine>
+                {{ workout.exercises.length }} exercises
+              </div>
+              <button mat-icon-button [routerLink]="['/workouts', workout.id]">
+                <mat-icon>navigate_next</mat-icon>
+              </button>
+            </mat-list-item>
+          </mat-list>
+          <ng-template #noWorkouts>
+            <p>No recent workouts.</p>
+          </ng-template>
+          <button mat-raised-button color="accent" routerLink="/workouts/new">
+            Start New Workout
+          </button>
+        </div>
+      </div>
+
+      <div class="dashboard-templates" *ngIf="workoutTemplates.length > 0">
+        <h2>Your Workout Templates</h2>
+        <div class="template-cards">
+          <mat-card *ngFor="let template of workoutTemplates" class="template-card">
+            <mat-card-header>
+              <mat-card-title>{{ template.name }}</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p>{{ template.description }}</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-button [routerLink]="['/templates', template.id]">
+                VIEW
+              </button>
+              <button mat-button (click)="startWorkoutFromTemplate(template)">
+                START WORKOUT
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        </div>
+        <button mat-button routerLink="/templates">
+          View All Templates
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -1,0 +1,68 @@
+.diary-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.form-row {
+  margin-bottom: 20px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.feeling-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.feeling-toggle .mat-button-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 16px;
+}
+
+.feeling-toggle .mat-button-toggle-checked {
+  background-color: #f0f0f0;
+}
+
+.feeling-toggle mat-icon {
+  margin-bottom: 4px;
+}
+
+.separator {
+  margin: 0 16px;
+  color: #666;
+}
+
+.workout-card {
+  margin-top: 16px;
+  border: 1px solid #e0e0e0;
+}
+
+.spotify-section {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 20px;
+}
+
+.spotify-search {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.coming-soon {
+  margin-left: 16px;
+  color: #666;
+  font-style: italic;
+}

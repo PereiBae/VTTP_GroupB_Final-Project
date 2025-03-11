@@ -12,6 +12,7 @@ import vttp.batch5.paf.finalproject.server.services.WorkoutTemplateService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/api/templates")
@@ -22,6 +23,7 @@ public class TemplateController {
 
     // Create a new workout template
     @PostMapping
+    @ResponseBody
     public ResponseEntity<WorkoutTemplate> createTemplate(
             @RequestBody Map<String, Object> payload,
             Authentication authentication) {
@@ -47,6 +49,7 @@ public class TemplateController {
 
     // Get all templates for the authenticated user
     @GetMapping
+    @ResponseBody
     public ResponseEntity<List<WorkoutTemplate>> getUserTemplates(Authentication authentication) {
         List<WorkoutTemplate> templates = workoutTemplateSvc.getTemplatesByUser(authentication.getName());
         return ResponseEntity.ok(templates);
@@ -54,6 +57,7 @@ public class TemplateController {
 
     // Get a specific template with its exercises
     @GetMapping("/{id}")
+    @ResponseBody
     public ResponseEntity<Map<String, Object>> getTemplateWithExercises(@PathVariable Integer id, Authentication authentication) {
         WorkoutTemplate template = workoutTemplateSvc.getTemplateWithExercises(id);
 
@@ -79,6 +83,7 @@ public class TemplateController {
 
     // Update a template
     @PutMapping("/{id}")
+    @ResponseBody
     public ResponseEntity<WorkoutTemplate> updateTemplate(
             @PathVariable Integer id,
             @RequestBody Map<String, Object> payload,
@@ -122,6 +127,7 @@ public class TemplateController {
 
     // Delete a template
     @DeleteMapping("/{id}")
+    @ResponseBody
     public ResponseEntity<Void> deleteTemplate(@PathVariable Integer id, Authentication authentication) {
         WorkoutTemplate existing = workoutTemplateSvc.getTemplateWithExercises(id);
 
@@ -145,9 +151,40 @@ public class TemplateController {
 
     // Helper method to convert from Map to TemplateExercise
     private List<TemplateExercise> convertToExerciseList(List<Map<String, Object>> exercisesMap) {
-        // Implement conversion logic here
-        // This is just a placeholder, you'll need to adapt it based on your payload structure
-        return List.of(); // Return empty list for now
+        if (exercisesMap == null) {
+            return List.of();
+        }
+
+        return exercisesMap.stream().map(map -> {
+            TemplateExercise exercise = new TemplateExercise();
+
+            if (map.containsKey("id") && map.get("id") != null) {
+                exercise.setId(Integer.valueOf(map.get("id").toString()));
+            }
+
+            exercise.setExerciseId((String) map.get("exerciseId"));
+            exercise.setExerciseName((String) map.get("exerciseName"));
+
+            if (map.containsKey("sets") && map.get("sets") != null) {
+                exercise.setSets(Integer.valueOf(map.get("sets").toString()));
+            } else {
+                exercise.setSets(3); // Default value
+            }
+
+            if (map.containsKey("reps") && map.get("reps") != null) {
+                exercise.setReps(Integer.valueOf(map.get("reps").toString()));
+            } else {
+                exercise.setReps(10); // Default value
+            }
+
+            if (map.containsKey("weight") && map.get("weight") != null) {
+                exercise.setWeight(Double.valueOf(map.get("weight").toString()));
+            } else {
+                exercise.setWeight(0.0); // Default value
+            }
+
+            return exercise;
+        }).collect(Collectors.toList());
     }
 
 }

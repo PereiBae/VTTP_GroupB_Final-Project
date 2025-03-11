@@ -3,7 +3,7 @@ package vttp.batch5.paf.finalproject.server.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import vttp.batch5.paf.finalproject.server.models.UserProfile;
-import vttp.batch5.paf.finalproject.server.repositories.UserProfileRepository;
+import vttp.batch5.paf.finalproject.server.repositories.mysql.UserProfileRepository;
 
 @Service
 public class UserProfileService {

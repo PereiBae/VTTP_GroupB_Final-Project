@@ -1,0 +1,48 @@
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.dashboard-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.dashboard-section {
+  flex: 1;
+  min-width: 300px;
+}
+
+h2 {
+  margin-top: 0;
+  color: #3f51b5;
+  font-weight: 500;
+}
+
+.template-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.template-card {
+  width: 250px;
+}
+
+.feeling-great { color: #4caf50; }
+.feeling-good { color: #8bc34a; }
+.feeling-okay { color: #ffc107; }
+.feeling-bad { color: #ff9800; }
+.feeling-terrible { color: #f44336; }
+
+mat-list-item {
+  margin-bottom: 8px;
+}
+
+button {
+  margin-top: 16px;
+}

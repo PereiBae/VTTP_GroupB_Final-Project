@@ -1,0 +1,116 @@
+<div class="diary-container">
+  <div class="header">
+    <h1>{{ isEdit ? 'Edit Diary Entry' : 'New Diary Entry' }}</h1>
+    <button mat-icon-button routerLink="/diary">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+  </div>
+
+  <form [formGroup]="diaryForm" (ngSubmit)="saveDiaryEntry()">
+    <mat-card>
+      <mat-card-content>
+        <div class="form-row">
+          <mat-form-field appearance="fill">
+            <mat-label>Date</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="date" required>
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+            <mat-error *ngIf="diaryForm.get('date')?.hasError('required')">
+              Date is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <label>How are you feeling today?</label>
+          <mat-button-toggle-group formControlName="feeling" class="feeling-toggle">
+            <mat-button-toggle value="terrible">
+              <mat-icon>sentiment_very_dissatisfied</mat-icon>
+              <span>Terrible</span>
+            </mat-button-toggle>
+            <mat-button-toggle value="bad">
+              <mat-icon>sentiment_dissatisfied</mat-icon>
+              <span>Bad</span>
+            </mat-button-toggle>
+            <mat-button-toggle value="okay">
+              <mat-icon>sentiment_neutral</mat-icon>
+              <span>Okay</span>
+            </mat-button-toggle>
+            <mat-button-toggle value="good">
+              <mat-icon>sentiment_satisfied</mat-icon>
+              <span>Good</span>
+            </mat-button-toggle>
+            <mat-button-toggle value="great">
+              <mat-icon>sentiment_very_satisfied</mat-icon>
+              <span>Great</span>
+            </mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Notes</mat-label>
+            <textarea matInput formControlName="notes" rows="5"
+                      placeholder="Write about your day, how you're feeling, or any thoughts..."></textarea>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-slide-toggle formControlName="workoutPerformed">
+            I worked out today
+          </mat-slide-toggle>
+        </div>
+
+        <div class="form-row" *ngIf="diaryForm.get('workoutPerformed')?.value">
+          <ng-container *ngIf="!workoutSelected; else workoutDetails">
+            <button mat-raised-button color="accent" (click)="startNewWorkout()">
+              Start New Workout
+            </button>
+            <span class="separator">or</span>
+            <button mat-raised-button (click)="openWorkoutSelector()">
+              Select Existing Workout
+            </button>
+          </ng-container>
+
+          <ng-template #workoutDetails>
+            <mat-card class="workout-card">
+              <mat-card-header>
+                <mat-card-title>{{ selectedWorkout?.name }}</mat-card-title>
+                <mat-card-subtitle>
+                  {{ selectedWorkout?.startTime | date:'medium' }}
+                </mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                <p>{{ selectedWorkout?.exercises?.length || 0 }} exercises</p>
+              </mat-card-content>
+              <mat-card-actions>
+                <button mat-button type="button" (click)="viewWorkout()">VIEW</button>
+                <button mat-button type="button" (click)="removeWorkout()">REMOVE</button>
+              </mat-card-actions>
+            </mat-card>
+          </ng-template>
+        </div>
+
+        <div class="form-row spotify-section">
+          <label>Add song of the day</label>
+          <div class="spotify-search" *ngIf="!spotifyTrackSelected">
+            <button mat-raised-button color="accent" type="button">
+              <mat-icon>search</mat-icon>
+              Search Spotify
+            </button>
+            <p class="coming-soon">(Coming soon)</p>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <button mat-button type="button" routerLink="/diary">
+          CANCEL
+        </button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="diaryForm.invalid || loading">
+          {{ isEdit ? 'UPDATE' : 'SAVE' }}
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </form>
+</div>

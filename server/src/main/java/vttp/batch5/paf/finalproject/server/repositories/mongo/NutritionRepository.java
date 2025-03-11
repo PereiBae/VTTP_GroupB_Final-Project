@@ -1,4 +1,4 @@
-package vttp.batch5.paf.finalproject.server.repositories;
+package vttp.batch5.paf.finalproject.server.repositories.mongo;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;

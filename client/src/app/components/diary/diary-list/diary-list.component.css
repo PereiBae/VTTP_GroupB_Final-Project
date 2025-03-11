@@ -1,0 +1,70 @@
+.diary-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.date-range {
+  margin-right: 16px;
+  width: 300px;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0;
+}
+
+.no-entries {
+  text-align: center;
+  margin: 40px 0;
+  color: #666;
+}
+
+.no-entries mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+}
+
+.diary-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.diary-entry-card {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.diary-entry-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.feeling-great { color: #4caf50; }
+.feeling-good { color: #8bc34a; }
+.feeling-okay { color: #ffc107; }
+.feeling-bad { color: #ff9800; }
+.feeling-terrible { color: #f44336; }
+
+.spotify-track {
+  display: flex;
+  align-items: center;
+  margin-top: 16px;
+  color: #1db954; /* Spotify green */
+}
+
+.spotify-track mat-icon {
+  margin-right: 8px;
+}

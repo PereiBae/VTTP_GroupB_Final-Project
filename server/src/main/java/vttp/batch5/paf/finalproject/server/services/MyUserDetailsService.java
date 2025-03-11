@@ -5,7 +5,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import vttp.batch5.paf.finalproject.server.repositories.MyUserDetailsRepository;
+import vttp.batch5.paf.finalproject.server.repositories.mysql.MyUserDetailsRepository;
 
 @Service
 public class MyUserDetailsService implements UserDetailsService {
