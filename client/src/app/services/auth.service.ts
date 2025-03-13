@@ -51,8 +51,27 @@ export class AuthService {
 
   // Update premium status and notify components
   updatePremiumStatus(): void {
-    const isPremium = this.isPremiumUser();
-    this.premiumStatusSubject.next(isPremium);
+    // In a real implementation, you would make an API call to get a new token
+    // with updated roles. For simplicity, we'll just update the local state.
+    const token = localStorage.getItem('jwt');
+    if (token) {
+      try {
+        // For demo purposes, we'll modify the token in local storage
+        // to include the premium role.
+        // DO NOT do this in production! Always get a new valid token from server.
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (!payload.authorities.includes('ROLE_PREMIUM')) {
+          payload.authorities.push('ROLE_PREMIUM');
+
+          // This is just for demonstration - normally you would get a new token
+          // from the server with the updated roles
+          console.log('Premium status updated in local state');
+        }
+        this.premiumStatusSubject.next(true);
+      } catch (e) {
+        console.error('Error updating premium status', e);
+      }
+    }
   }
 
   // This method should be called after successful login

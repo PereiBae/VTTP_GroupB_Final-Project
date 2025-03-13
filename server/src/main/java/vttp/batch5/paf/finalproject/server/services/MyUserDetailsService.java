@@ -22,4 +22,8 @@ public class MyUserDetailsService implements UserDetailsService {
         return myUserDetailsRepo.createUser(email, encodedPassword);
     }
 
+    public boolean upgradeToPremium(String email) {
+        return myUserDetailsRepo.upgradeToPremium(email);
+    }
+
 }

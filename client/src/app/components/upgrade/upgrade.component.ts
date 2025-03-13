@@ -1,7 +1,8 @@
 import {Component, inject, OnInit} from '@angular/core';
 import {AuthService} from '../../services/auth.service';
 import {MatSnackBar} from '@angular/material/snack-bar';
-import {Router} from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
+import {PaymentService} from '../../services/payment.service';
 
 interface PlanFeature {
   title: string;
@@ -10,6 +11,7 @@ interface PlanFeature {
 }
 
 interface Plan {
+  id: string;
   name: string;
   price: number;
   period: string;
@@ -29,14 +31,26 @@ export class UpgradeComponent implements OnInit{
   plans: Plan[] = [];
   selectedPlan: Plan | null = null;
   isPremium = false;
+  isProcessing = false;
+  paymentError: string | null = null;
 
   private authService = inject(AuthService);
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
+  private paymentService = inject(PaymentService);
+  private route = inject(ActivatedRoute);
 
   ngOnInit() {
     this.isPremium = this.authService.isPremiumUser();
     this.initializePlans();
+
+    // Check for successful payment
+    this.route.queryParams.subscribe(params => {
+      const sessionId = params['session_id'];
+      if (sessionId) {
+        this.checkPaymentStatus(sessionId);
+      }
+    });
   }
 
   initializePlans() {
@@ -64,6 +78,7 @@ export class UpgradeComponent implements OnInit{
 
     this.plans = [
       {
+        id: 'standard',
         name: 'Standard',
         price: 0,
         period: 'Free forever',
@@ -71,6 +86,7 @@ export class UpgradeComponent implements OnInit{
         buttonText: 'Current Plan'
       },
       {
+        id: 'premium_monthly',
         name: 'Premium',
         price: 9.99,
         period: 'per month',
@@ -79,6 +95,7 @@ export class UpgradeComponent implements OnInit{
         recommended: true
       },
       {
+        id: 'premium_annual',
         name: 'Premium Annual',
         price: 99.99,
         period: 'per year',
@@ -89,42 +106,74 @@ export class UpgradeComponent implements OnInit{
   }
 
   selectPlan(plan: Plan) {
+    if (plan.id === 'standard') {
+      return;
+    }
     this.selectedPlan = plan;
   }
 
   upgradeToSelectedPlan() {
-    if (!this.selectedPlan || this.selectedPlan.name === 'Standard') {
+    if (!this.selectedPlan || this.selectedPlan.id === 'standard') {
       return;
     }
 
-    // This will be replaced with Stripe implementation in Phase 4
-    this.snackBar.open(
-      'Payment processing integration coming soon! Check back in Phase 4.',
-      'OK',
-      { duration: 5000 }
-    );
+    this.isProcessing = true;
+    this.paymentError = null;
 
-    // Mock upgrade - in real implementation, this would be called after successful payment
-    this.mockUpgradeUser();
+    this.paymentService.createCheckoutSession(this.selectedPlan.id).subscribe({
+      next: (response) => {
+        this.isProcessing = false;
+        // Redirect to Stripe Checkout
+        window.location.href = response.url;
+      },
+      error: (error) => {
+        this.isProcessing = false;
+        this.paymentError = error.error?.message || 'An error occurred during payment processing';
+        if (this.paymentError != null) {
+          this.snackBar.open(this.paymentError, 'Close', {duration: 5000});
+        }
+      }
+    });
   }
 
-  // Mock function - will be replaced with actual implementation
-  private mockUpgradeUser() {
-    // In the real implementation, this would:
-    // 1. Call an API to update user's premium status
-    // 2. Get a new JWT token with updated roles
-    // 3. Store the token and update the auth service
+  checkPaymentStatus(sessionId: string) {
+    this.isProcessing = true;
 
-    this.snackBar.open(
-      'For development: Pretending upgrade was successful!',
-      'OK',
-      { duration: 3000 }
-    );
+    this.paymentService.getSessionStatus(sessionId).subscribe({
+      next: (response) => {
+        this.isProcessing = false;
 
-    // Redirect to dashboard
-    setTimeout(() => {
-      this.router.navigate(['/dashboard']);
-    }, 3000);
+        if (response.isPremium) {
+          // Update auth token to reflect premium status
+          this.updateAuthStatus();
+
+          this.snackBar.open('Payment successful! You are now a premium member.', 'Close', {
+            duration: 5000
+          });
+
+          // Clear the URL parameters
+          this.router.navigate(['/upgrade'], { replaceUrl: true });
+        } else {
+          this.snackBar.open('Payment is being processed. Please try again later.', 'Close', {
+            duration: 5000
+          });
+        }
+      },
+      error: (error) => {
+        this.isProcessing = false;
+        this.paymentError = error.error?.message || 'An error occurred while checking payment status';
+        if (this.paymentError != null) {
+          this.snackBar.open(this.paymentError, 'Close', {duration: 5000});
+        }
+      }
+    });
+  }
+
+  updateAuthStatus() {
+    // Call login method to refresh the JWT token
+    // This should trigger a backend call to get a new token with updated roles
+    // For simplicity, we'll just update the local premium status
+    this.isPremium = true;
   }
 
 }

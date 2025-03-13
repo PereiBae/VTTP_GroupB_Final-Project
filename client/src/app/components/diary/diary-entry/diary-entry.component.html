@@ -206,11 +206,10 @@
         </div>
 
         <!-- Spotify Section -->
-        <!-- Modify the Spotify Section in diary-entry.component.html -->
         <div class="form-row spotify-section">
           <h3>Add Song of the Day</h3>
 
-          <!-- Connect to Spotify button (only show if not connected) -->
+          <!-- Connect to Spotify button -->
           <div *ngIf="!spotifyConnected" class="spotify-connect">
             <button mat-raised-button color="accent" (click)="connectToSpotify()">
               <mat-icon>music_note</mat-icon>
@@ -219,12 +218,12 @@
             <p class="spotify-connect-info">Connect to Spotify to add songs to your diary entries</p>
           </div>
 
-          <!-- Selected track display (show first if exists) -->
+          <!-- Selected track display -->
           <div class="selected-track" *ngIf="selectedTrack">
             <img [src]="selectedTrack.albumArt || 'assets/default-album-art.jpg'" class="track-image" alt="Album art">
             <div class="track-info">
               <div class="track-name">{{selectedTrack.name}}</div>
-              <div class="track-artist">{{selectedTrack.artist}} • {{selectedTrack.albumName || ''}}</div>
+              <div class="track-artist">{{selectedTrack.artist}}</div>
             </div>
             <div class="track-actions">
               <button mat-icon-button color="primary" *ngIf="selectedTrack.previewUrl" (click)="playPreview()">
@@ -236,7 +235,7 @@
             </div>
           </div>
 
-          <!-- Spotify search when connected (always show if connected) -->
+          <!-- Spotify search when connected -->
           <div *ngIf="spotifyConnected" class="spotify-search">
             <mat-form-field appearance="fill" class="full-width">
               <mat-label>Search for a song</mat-label>

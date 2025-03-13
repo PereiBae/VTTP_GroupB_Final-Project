@@ -1,0 +1,35 @@
+.success-container {
+  max-width: 600px;
+  margin: 40px auto;
+  text-align: center;
+  padding: 20px;
+}
+.success-icon, .error-icon {
+  font-size: 64px;
+  height: 64px;
+  width: 64px;
+  margin: 20px auto;
+}
+.success-icon {
+  color: #4caf50;
+}
+.error-icon {
+  color: #f44336;
+}
+.loading-text {
+  margin-top: 20px;
+  color: #666;
+}
+.centered {
+  margin: 0 auto;
+}
+.error-message {
+  color: #f44336;
+  margin: 20px 0;
+}
+mat-card-content {
+  padding: 20px;
+}
+button {
+  margin-top: 20px;
+}

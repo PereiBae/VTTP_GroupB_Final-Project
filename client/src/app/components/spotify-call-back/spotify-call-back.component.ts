@@ -14,7 +14,7 @@ export class SpotifyCallBackComponent implements OnInit{
   private router = inject(Router)
   private spotifyService = inject(SpotifyService)
 
-  ngOnInit() {
+  ngOnInit(): void {
     // Get the code from the URL
     this.route.queryParams.subscribe(params => {
       const code = params['code'];
@@ -22,25 +22,37 @@ export class SpotifyCallBackComponent implements OnInit{
 
       if (error) {
         console.error('Spotify authentication error:', error);
-        this.router.navigate(['/diary/new']);
+        this.navigateBack();
         return;
       }
 
       if (code) {
+        console.log('Received Spotify auth code, exchanging for token');
         this.spotifyService.exchangeCodeForToken(code).subscribe({
           next: () => {
-            // Redirect back to diary entry form
-            this.router.navigate(['/diary/new']);
+            console.log('Token obtained successfully');
+            this.navigateBack();
           },
           error: (err) => {
             console.error('Error exchanging code for token:', err);
-            this.router.navigate(['/diary/new']);
+            this.navigateBack();
           }
         });
       } else {
-        this.router.navigate(['/diary/new']);
+        this.navigateBack();
       }
     });
+  }
+
+  private navigateBack(): void {
+    // Check if we have a saved entry ID to return to
+    const entryId = sessionStorage.getItem('return_to_entry');
+    if (entryId) {
+      sessionStorage.removeItem('return_to_entry');
+      this.router.navigate(['/diary', entryId]);
+    } else {
+      this.router.navigate(['/diary/new']);
+    }
   }
 
 }

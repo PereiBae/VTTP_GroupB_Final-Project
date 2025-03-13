@@ -2,3 +2,53 @@
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* Stripe Elements Styles */
+.stripe-element {
+  height: 40px;
+  padding: 10px 12px;
+  width: 100%;
+  color: #32325d;
+  background-color: white;
+  border: 1px solid #e4e4e4;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px 0 #e6ebf1;
+  -webkit-transition: box-shadow 150ms ease;
+  transition: box-shadow 150ms ease;
+}
+
+.stripe-element--focus {
+  box-shadow: 0 1px 3px 0 #cfd7df;
+}
+
+.stripe-element--invalid {
+  border-color: #fa755a;
+}
+
+.stripe-error {
+  color: #fa755a;
+  margin-top: 8px;
+}
+
+.payment-processing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.payment-success-icon {
+  color: #4caf50;
+  font-size: 48px;
+  height: 48px;
+  width: 48px;
+  margin-bottom: 16px;
+}
+
+.payment-error-icon {
+  color: #f44336;
+  font-size: 48px;
+  height: 48px;
+  width: 48px;
+  margin-bottom: 16px;
+}

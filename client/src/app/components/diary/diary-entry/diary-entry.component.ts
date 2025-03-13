@@ -78,7 +78,8 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
     this.entryId = this.route.snapshot.paramMap.get('id') || undefined;
     this.isEdit = !!this.entryId;
 
-    this.checkSpotifyConnection();
+    this.checkSpotifyToken();
+    this.setupSpotifySearch()
 
     if (this.isEdit && this.entryId) {
       this.loadDiaryEntry(this.entryId);
@@ -95,7 +96,6 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
         exercises: []
       });
 
-      this.setupSpotifySearch()
     }
 
     // React to workoutPerformed toggle
@@ -185,17 +185,18 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
           });
         }
 
-        // Create selected track object if Spotify track was attached
-        if (entry.spotifyTrackId && entry.spotifyTrackName && entry.spotifyArtistName) {
+        // Handle Spotify track data if it exists
+        if (entry.spotifyTrackId && entry.spotifyTrackName) {
+          // Create a basic track object from the stored data
           this.selectedTrack = {
             id: entry.spotifyTrackId,
             name: entry.spotifyTrackName,
-            artist: entry.spotifyArtistName,
-            albumName: 'From diary entry', // Placeholder as we don't store this
-            albumArt: 'assets/default-album-art.jpg' // Default image
+            artist: entry.spotifyArtistName || '',
+            albumName: '', // We don't have this stored
+            albumArt: 'assets/default-album-art.jpg' // Use a default image
           };
 
-          // If connected to Spotify, try to get the full track details
+          // If we have a Spotify connection, try to get full track details
           if (this.spotifyConnected) {
             this.spotifyService.getTrack(entry.spotifyTrackId).subscribe({
               next: (trackDetails) => {
@@ -203,7 +204,7 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
               },
               error: (err) => {
                 console.error('Could not fetch track details:', err);
-                // Keep the basic track info we already set
+                // We'll keep the basic track info we already set
               }
             });
           }
@@ -512,6 +513,11 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
   }
 
   connectToSpotify() {
+    // Store the current entry ID if editing
+    if (this.entryId) {
+      sessionStorage.setItem('return_to_entry', this.entryId);
+    }
+
     this.spotifyService.getAuthUrl().subscribe(url => {
       window.location.href = url;
     });
@@ -543,27 +549,21 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
 
   playPreview() {
     if (this.selectedTrack && this.selectedTrack.previewUrl) {
-      // Create and play audio element
       const audio = new Audio(this.selectedTrack.previewUrl);
       audio.play();
     }
   }
 
-  checkSpotifyConnection() {
+  checkSpotifyToken() {
     const token = localStorage.getItem('spotify_token');
     console.log('Spotify token exists:', !!token);
     this.spotifyConnected = !!token;
-
-    // If connected but token might be expired, validate it
-    if (this.spotifyConnected) {
-      // Optional: Add token validation call
-    }
   }
 
   setupSpotifySearch() {
-    console.log('Setting up Spotify search...');
+    console.log('Setting up Spotify search');
 
-    // Unsubscribe from any existing subscription first
+    // Clean up any existing subscription
     if (this.spotifySearchSubscription) {
       this.spotifySearchSubscription.unsubscribe();
     }
@@ -578,13 +578,24 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
             return of([]);
           }
 
+          // Check token before searching
+          if (!this.spotifyConnected) {
+            console.warn('Not connected to Spotify');
+            return of([]);
+          }
+
           this.isSearchingSpotify = true;
-          console.log('Searching Spotify for:', query);
-          // Add explicit error handling
           return this.spotifyService.searchTracks(query).pipe(
             catchError(error => {
               console.error('Spotify search error:', error);
               this.isSearchingSpotify = false;
+
+              // Handle token expiration
+              if (error.status === 401) {
+                this.spotifyConnected = false;
+                localStorage.removeItem('spotify_token');
+              }
+
               return of([]);
             })
           );
@@ -592,12 +603,12 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
       )
       .subscribe({
         next: results => {
-          console.log('Search results:', results);
+          console.log('Search results:', results.length);
           this.spotifySearchResults = results;
           this.isSearchingSpotify = false;
         },
         error: err => {
-          console.error('Observable error:', err);
+          console.error('Subscription error:', err);
           this.isSearchingSpotify = false;
         }
       });

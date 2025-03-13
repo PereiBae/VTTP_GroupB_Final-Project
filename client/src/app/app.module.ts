@@ -29,6 +29,7 @@ import {WorkoutSessionComponent} from './components/workout/workout-session/work
 import {StatisticComponent} from './components/statistics/statistic/statistic.component';
 import {SocialChatComponent} from './components/chat/social-chat/social-chat.component';
 import {SpotifyCallBackComponent} from './components/spotify-call-back/spotify-call-back.component';
+import {PaymentSuccessComponent} from './components/payments/payment-success/payment-success.component';
 
 const appRoutes: Routes = [
   { path: '', component: LoginComponent, canActivate: [AlreadyLoggedInGuard]},
@@ -60,6 +61,10 @@ const appRoutes: Routes = [
   // Social Route
   { path: 'social', component: SocialChatComponent, canActivate: [AuthGuard] },
 
+  // Payment Routes
+  { path: 'payment/success', component: PaymentSuccessComponent, canActivate: [AuthGuard] },
+  { path: 'payment/cancel', redirectTo: '/upgrade', pathMatch: 'full' },
+
   // Premium routes
   { path: 'upgrade', component: UpgradeComponent, canActivate: [AuthGuard] },
   { path: 'nutrition', component: NutritionListComponent, canActivate: [PremiumGuard] },
@@ -89,7 +94,8 @@ const appRoutes: Routes = [
     WorkoutSessionComponent,
     StatisticComponent,
     SocialChatComponent,
-    SpotifyCallBackComponent
+    SpotifyCallBackComponent,
+    PaymentSuccessComponent
   ],
   imports: [
     BrowserModule,

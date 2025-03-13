@@ -40,15 +40,26 @@ export class SpotifyService extends BaseService {
 
   getAuthUrl(): Observable<string> {
     return this.http.get<{ url: string }>('/api/spotify/auth-url', { headers: this.getAuthHeaders() })
-      .pipe(map(response => response.url));
+      .pipe(
+        map(response => response.url),
+        catchError(error => {
+          console.error('Error getting auth URL:', error);
+          return throwError(() => new Error('Failed to get Spotify authorization URL'));
+        })
+      );
   }
 
   exchangeCodeForToken(code: string): Observable<SpotifyToken> {
     return this.http.post<SpotifyToken>('/api/spotify/token', { code }, { headers: this.getAuthHeaders() })
       .pipe(
         tap(response => {
+          console.log('Received Spotify token');
           localStorage.setItem('spotify_token', response.access_token);
           this.tokenSubject.next(response.access_token);
+        }),
+        catchError(error => {
+          console.error('Error exchanging code for token:', error);
+          return throwError(() => new Error('Failed to get Spotify token'));
         })
       );
   }
@@ -93,9 +104,9 @@ export class SpotifyService extends BaseService {
   }
 
   getTrack(id: string): Observable<SpotifyTrack> {
-    const token = this.tokenSubject.getValue();
+    const token = localStorage.getItem('spotify_token');
     if (!token) {
-      throw new Error('Spotify token not available');
+      return throwError(() => new Error('Spotify token not available'));
     }
 
     return this.http.get<any>(`/api/spotify/track/${id}?token=${token}`,
@@ -108,7 +119,11 @@ export class SpotifyService extends BaseService {
           albumName: track.album.name,
           albumArt: track.album.images[1]?.url || '',
           previewUrl: track.preview_url
-        }))
+        })),
+        catchError(error => {
+          console.error('Error getting track:', error);
+          return throwError(() => error);
+        })
       );
   }
 
