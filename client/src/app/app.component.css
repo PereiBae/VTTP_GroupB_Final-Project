@@ -34,3 +34,49 @@
   background: #3f51b5;
   color: white;
 }
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+/* Fix the sidenav container to take up full height regardless of content */
+mat-sidenav-container {
+  position: absolute;
+  top: 64px; /* Height of your toolbar */
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+/* For mobile screens with smaller toolbar */
+@media (max-width: 599px) {
+  mat-sidenav-container {
+    top: 56px; /* Height of toolbar on mobile */
+  }
+}
+
+mat-sidenav {
+  width: 250px;
+}
+
+/* Make the sidenav scrollable if content exceeds height */
+mat-sidenav .mat-drawer-inner-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+}
+
+mat-nav-list {
+  flex: 1;
+}
+
+mat-nav-list a mat-icon {
+  margin-right: 16px;
+}
+
+/* Make the main content area scrollable */
+mat-sidenav-content {
+  height: 100%;
+  overflow-y: auto;
+}
