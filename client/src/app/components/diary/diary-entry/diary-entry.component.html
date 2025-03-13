@@ -205,43 +205,54 @@
           </div>
         </div>
 
-        <!-- Spotify Section (Not premium exclusive) -->
+        <!-- Spotify Section -->
         <div class="form-row spotify-section">
           <h3>Add Song of the Day</h3>
-          <div class="spotify-search">
+
+          <!-- Connect to Spotify button -->
+          <div *ngIf="!spotifyConnected" class="spotify-connect">
+            <button mat-raised-button color="accent" (click)="connectToSpotify()">
+              <mat-icon>music_note</mat-icon>
+              Connect to Spotify
+            </button>
+            <p class="spotify-connect-info">Connect to Spotify to add songs to your diary entries</p>
+          </div>
+
+          <!-- Spotify search when connected -->
+          <div *ngIf="spotifyConnected" class="spotify-search">
             <mat-form-field appearance="fill" class="full-width">
               <mat-label>Search for a song</mat-label>
-              <input matInput [formControl]="spotifySearchControl" placeholder="Search Spotify...">
-              <mat-icon matSuffix class="spotify-icon">music_note</mat-icon>
+              <input matInput [formControl]="spotifySearchControl" placeholder="Type song or artist name...">
+              <mat-spinner *ngIf="isSearchingSpotify" diameter="20" matSuffix></mat-spinner>
+              <mat-icon *ngIf="!isSearchingSpotify" matSuffix class="spotify-icon">music_note</mat-icon>
             </mat-form-field>
 
-            <!-- Placeholder for search results -->
+            <!-- Spotify search results -->
             <div class="spotify-results" *ngIf="spotifySearchResults.length > 0">
               <div class="spotify-track-item" *ngFor="let track of spotifySearchResults" (click)="selectTrack(track)">
                 <img [src]="track.albumArt" class="track-image" alt="Album art">
                 <div class="track-info">
                   <div class="track-name">{{track.name}}</div>
-                  <div class="track-artist">{{track.artist}}</div>
+                  <div class="track-artist">{{track.artist}} • {{track.albumName}}</div>
                 </div>
               </div>
             </div>
 
-            <!-- Preview selected track -->
+            <!-- Selected track -->
             <div class="selected-track" *ngIf="selectedTrack">
               <img [src]="selectedTrack.albumArt" class="track-image" alt="Album art">
               <div class="track-info">
                 <div class="track-name">{{selectedTrack.name}}</div>
-                <div class="track-artist">{{selectedTrack.artist}}</div>
+                <div class="track-artist">{{selectedTrack.artist}} • {{selectedTrack.albumName}}</div>
               </div>
-              <button mat-icon-button color="warn" (click)="clearSelectedTrack()">
-                <mat-icon>clear</mat-icon>
-              </button>
-            </div>
-
-            <!-- Coming soon message -->
-            <div class="coming-soon-notice" *ngIf="!spotifySearchResults.length && !selectedTrack">
-              <mat-icon>schedule</mat-icon>
-              <span>Spotify integration coming in Phase 4!</span>
+              <div class="track-actions">
+                <button mat-icon-button color="primary" *ngIf="selectedTrack.previewUrl" (click)="playPreview()">
+                  <mat-icon>play_circle</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="clearSelectedTrack()">
+                  <mat-icon>clear</mat-icon>
+                </button>
+              </div>
             </div>
           </div>
         </div>

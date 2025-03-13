@@ -28,6 +28,7 @@ import {WorkoutListComponent} from './components/workout/workout-list/workout-li
 import {WorkoutSessionComponent} from './components/workout/workout-session/workout-session.component';
 import {StatisticComponent} from './components/statistics/statistic/statistic.component';
 import {SocialChatComponent} from './components/chat/social-chat/social-chat.component';
+import {SpotifyCallBackComponent} from './components/spotify-call-back/spotify-call-back.component';
 
 const appRoutes: Routes = [
   { path: '', component: LoginComponent, canActivate: [AlreadyLoggedInGuard]},
@@ -38,6 +39,7 @@ const appRoutes: Routes = [
   { path: 'diary', component: DiaryListComponent, canActivate: [AuthGuard] },
   { path: 'diary/new', component: DiaryEntryComponent, canActivate: [AuthGuard] },
   { path: 'diary/:id', component: DiaryEntryComponent, canActivate: [AuthGuard] },
+  { path: 'callback', component:SpotifyCallBackComponent},
 
   // Workout routes
   { path: 'workouts', component: WorkoutListComponent, canActivate: [AuthGuard] },
@@ -86,7 +88,8 @@ const appRoutes: Routes = [
     WorkoutListComponent,
     WorkoutSessionComponent,
     StatisticComponent,
-    SocialChatComponent
+    SocialChatComponent,
+    SpotifyCallBackComponent
   ],
   imports: [
     BrowserModule,

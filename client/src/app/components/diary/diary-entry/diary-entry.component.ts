@@ -5,13 +5,15 @@ import {DiaryService} from '../../../services/diary.service';
 import {ActivatedRoute, Router} from '@angular/router';
 import {MatDialog} from '@angular/material/dialog';
 import {DiaryEntry} from '../../../models/diary-entry';
-import {Observable, Subject, takeUntil} from 'rxjs';
+import {debounceTime, distinctUntilChanged, Observable, of, Subject, takeUntil} from 'rxjs';
 import {WorkoutTemplate} from '../../../models/workout-template';
 import {TemplateService} from '../../../services/template.service';
 import {AuthService} from '../../../services/auth.service';
 import {WorkoutStore} from '../../../stores/workout.store';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {ExerciseLog, ExerciseSet} from '../../../models/exercise-log';
+import {SpotifyService, SpotifyTrack} from '../../../services/spotify.service';
+import {switchMap} from 'rxjs/operators';
 
 @Component({
   selector: 'app-diary-entry',
@@ -24,9 +26,10 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
 
   // Add inside the class
   spotifySearchControl = new FormControl('');
-  spotifySearchResults: any[] = [];
-  selectedTrack: any = null;
-  isPremium = false;
+  spotifySearchResults: SpotifyTrack[] = [];
+  selectedTrack: SpotifyTrack | null = null;
+  isSearchingSpotify = false;
+  spotifyConnected = false;
 
   diaryForm!: FormGroup;
   workoutForm!: FormGroup;
@@ -54,7 +57,8 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
     private route: ActivatedRoute,
     private router: Router,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private spotifyService: SpotifyService
   ) {
     this.workout$ = this.workoutStore.currentWorkout$;
     this.workoutLoading$ = this.workoutStore.loading$;
@@ -64,7 +68,8 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
   ngOnInit(): void {
     this.createForms();
     this.loadTemplates();
-    this.isPremium = this.authService.isPremiumUser();
+    // Check if Spotify is connected
+    this.spotifyConnected = this.spotifyService.hasValidToken();
 
     this.entryId = this.route.snapshot.paramMap.get('id') || undefined;
     this.isEdit = !!this.entryId;
@@ -82,6 +87,29 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
         name: 'Today\'s Workout',
         startTime: new Date().toISOString(),
         exercises: []
+      });
+
+      // Set up search debounce
+      this.spotifySearchControl.valueChanges.pipe(
+        debounceTime(500),
+        distinctUntilChanged(),
+        switchMap(query => {
+          if (!query || query.length < 3) {
+            return of([]);
+          }
+
+          this.isSearchingSpotify = true;
+          return this.spotifyService.searchTracks(query);
+        })
+      ).subscribe({
+        next: results => {
+          this.spotifySearchResults = results;
+          this.isSearchingSpotify = false;
+        },
+        error: err => {
+          console.error('Error searching Spotify:', err);
+          this.isSearchingSpotify = false;
+        }
       });
     }
 
@@ -469,12 +497,18 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
     return (this.getExerciseSets(exerciseIndex) as FormArray).controls;
   }
 
-  selectTrack(track: any) {
+  connectToSpotify() {
+    this.spotifyService.getAuthUrl().subscribe(url => {
+      window.location.href = url;
+    });
+  }
+
+  selectTrack(track: SpotifyTrack) {
     this.selectedTrack = track;
     this.spotifySearchResults = [];
     this.spotifySearchControl.setValue('');
 
-    // In real implementation, update form values
+    // Update form values
     this.diaryForm.patchValue({
       spotifyTrackId: track.id,
       spotifyTrackName: track.name,
@@ -491,6 +525,14 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
       spotifyTrackName: null,
       spotifyArtistName: null
     });
+  }
+
+  playPreview() {
+    if (this.selectedTrack && this.selectedTrack.previewUrl) {
+      // Create and play audio element
+      const audio = new Audio(this.selectedTrack.previewUrl);
+      audio.play();
+    }
   }
 
 }
