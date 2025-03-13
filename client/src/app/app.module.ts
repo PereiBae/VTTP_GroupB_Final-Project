@@ -26,6 +26,8 @@ import {TemplateFormComponent} from './components/template/template-form/templat
 import {TemplateListComponent} from './components/template/template-list/template-list.component';
 import {WorkoutListComponent} from './components/workout/workout-list/workout-list.component';
 import {WorkoutSessionComponent} from './components/workout/workout-session/workout-session.component';
+import {StatisticComponent} from './components/statistics/statistic/statistic.component';
+import {SocialChatComponent} from './components/chat/social-chat/social-chat.component';
 
 const appRoutes: Routes = [
   { path: '', component: LoginComponent, canActivate: [AlreadyLoggedInGuard]},
@@ -53,11 +55,15 @@ const appRoutes: Routes = [
   // Profile routes
   { path: 'profile', component: ProfileFormComponent, canActivate: [AuthGuard] },
 
+  // Social Route
+  { path: 'social', component: SocialChatComponent, canActivate: [AuthGuard] },
+
   // Premium routes
   { path: 'upgrade', component: UpgradeComponent, canActivate: [AuthGuard] },
   { path: 'nutrition', component: NutritionListComponent, canActivate: [PremiumGuard] },
   { path: 'nutrition/new', component: NutritionFormComponent, canActivate: [PremiumGuard] },
   { path: 'nutrition/:id', component: NutritionFormComponent, canActivate: [PremiumGuard] },
+  { path: 'statistics', component: StatisticComponent, canActivate: [PremiumGuard] },
   { path: '**', redirectTo: '/dashboard', pathMatch: 'full' }
 ]
 
@@ -78,7 +84,9 @@ const appRoutes: Routes = [
     TemplateFormComponent,
     TemplateListComponent,
     WorkoutListComponent,
-    WorkoutSessionComponent
+    WorkoutSessionComponent,
+    StatisticComponent,
+    SocialChatComponent
   ],
   imports: [
     BrowserModule,

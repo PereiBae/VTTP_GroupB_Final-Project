@@ -1,5 +1,5 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
-import {FormArray, FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {FormArray, FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
 import {WorkoutSession} from '../../../models/workout-session';
 import {DiaryService} from '../../../services/diary.service';
 import {ActivatedRoute, Router} from '@angular/router';
@@ -21,6 +21,12 @@ import {ExerciseLog, ExerciseSet} from '../../../models/exercise-log';
   providers:[WorkoutStore]
 })
 export class DiaryEntryComponent implements OnInit, OnDestroy{
+
+  // Add inside the class
+  spotifySearchControl = new FormControl('');
+  spotifySearchResults: any[] = [];
+  selectedTrack: any = null;
+  isPremium = false;
 
   diaryForm!: FormGroup;
   workoutForm!: FormGroup;
@@ -58,6 +64,7 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
   ngOnInit(): void {
     this.createForms();
     this.loadTemplates();
+    this.isPremium = this.authService.isPremiumUser();
 
     this.entryId = this.route.snapshot.paramMap.get('id') || undefined;
     this.isEdit = !!this.entryId;
@@ -460,6 +467,30 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
 
   getSetsControls(exerciseIndex: number) {
     return (this.getExerciseSets(exerciseIndex) as FormArray).controls;
+  }
+
+  selectTrack(track: any) {
+    this.selectedTrack = track;
+    this.spotifySearchResults = [];
+    this.spotifySearchControl.setValue('');
+
+    // In real implementation, update form values
+    this.diaryForm.patchValue({
+      spotifyTrackId: track.id,
+      spotifyTrackName: track.name,
+      spotifyArtistName: track.artist
+    });
+  }
+
+  clearSelectedTrack() {
+    this.selectedTrack = null;
+
+    // Clear form values
+    this.diaryForm.patchValue({
+      spotifyTrackId: null,
+      spotifyTrackName: null,
+      spotifyArtistName: null
+    });
   }
 
 }

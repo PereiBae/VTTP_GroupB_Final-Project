@@ -1,1 +1,77 @@
-<p>upgrade works!</p>
+<div class="upgrade-container">
+  <div class="header">
+    <h1>Upgrade to Premium</h1>
+  </div>
+
+  <div class="plans-container">
+    <!-- Display current status -->
+    <div class="current-status" *ngIf="isPremium">
+      <mat-icon class="premium-icon">verified</mat-icon>
+      <h2>You're a Premium Member!</h2>
+      <p>You have access to all premium features including Nutrition Tracking and Advanced Statistics.</p>
+    </div>
+
+    <div class="plan-cards" *ngIf="!isPremium">
+      <mat-card *ngFor="let plan of plans"
+                [ngClass]="{'recommended-plan': plan.recommended}"
+                (click)="selectPlan(plan)">
+        <div class="recommended-badge" *ngIf="plan.recommended">RECOMMENDED</div>
+        <mat-card-header>
+          <mat-card-title>{{plan.name}}</mat-card-title>
+          <mat-card-subtitle *ngIf="plan.price === 0">Free</mat-card-subtitle>
+          <mat-card-subtitle *ngIf="plan.price > 0">${{plan.price}} {{plan.period}}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="plan-features">
+            <div *ngFor="let feature of plan.features" class="feature-item">
+              <mat-icon *ngIf="feature.included" class="feature-included">check_circle</mat-icon>
+              <mat-icon *ngIf="!feature.included" class="feature-not-included">cancel</mat-icon>
+              <div class="feature-text">
+                <h3>{{feature.title}}</h3>
+                <p>{{feature.description}}</p>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-raised-button
+                  [color]="plan.name === 'Standard' ? 'basic' : 'primary'"
+                  [disabled]="plan.name === 'Standard' && !isPremium"
+                  [ngClass]="{'selected-plan': selectedPlan === plan}">
+            {{plan.buttonText}}
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+
+    <!-- Payment section -->
+    <div class="payment-section" *ngIf="selectedPlan && selectedPlan.name !== 'Standard' && !isPremium">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Complete Your Upgrade</mat-card-title>
+          <mat-card-subtitle>You selected: {{selectedPlan.name}} - ${{selectedPlan.price}} {{selectedPlan.period}}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="payment-info">
+            Payment processing will be implemented in Phase 4. For now, this is a placeholder for the Stripe integration.
+          </p>
+
+          <div class="payment-methods">
+            <div class="payment-method-icons">
+              <mat-icon>credit_card</mat-icon>
+              <mat-icon>account_balance</mat-icon>
+              <mat-icon>payment</mat-icon>
+            </div>
+            <p>Secure payment processing</p>
+          </div>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-button (click)="selectedPlan = null">CANCEL</button>
+          <button mat-raised-button color="primary" (click)="upgradeToSelectedPlan()">
+            COMPLETE UPGRADE
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+</div>

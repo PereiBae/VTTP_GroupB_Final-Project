@@ -1,10 +1,8 @@
 import {Component, inject, OnInit} from '@angular/core';
 import {DiaryEntry} from '../../models/diary-entry';
-import {WorkoutSession} from '../../models/workout-session';
 import {WorkoutTemplate} from '../../models/workout-template';
 import {DiaryService} from '../../services/diary.service';
 import {TemplateService} from '../../services/template.service';
-import {WorkoutService} from '../../services/workout.service';
 import {AuthService} from '../../services/auth.service';
 import {Router} from '@angular/router';
 
@@ -16,13 +14,14 @@ import {Router} from '@angular/router';
 })
 export class DashboardComponent implements OnInit{
 
+  // Combined diary entries (which now include workouts)
   recentEntries: DiaryEntry[] = [];
-  recentWorkouts: WorkoutSession[] = [];
   workoutTemplates: WorkoutTemplate[] = [];
   isPremium = false;
+  loading = false;
+
 
   private diaryService = inject(DiaryService)
-  private workoutService = inject(WorkoutService)
   private templateService = inject(TemplateService)
   private authService = inject(AuthService)
   private router = inject(Router)
@@ -33,21 +32,33 @@ export class DashboardComponent implements OnInit{
   }
 
   loadDashboardData() {
-    // Load recent diary entries
-    this.diaryService.getDiaryEntries().subscribe(entries => {
-      this.recentEntries = entries.slice(0, 5); // Get the 5 most recent entries
-    });
+    this.loading = true;
 
-    // Load recent workouts
-    this.workoutService.getWorkoutSessions().subscribe(workouts => {
-      this.recentWorkouts = workouts.slice(0, 5); // Get the 5 most recent workouts
+    // Load recent diary entries (which now include workout data)
+    this.diaryService.getDiaryEntries().subscribe({
+      next: entries => {
+        this.recentEntries = entries.slice(0, 5); // Get the 5 most recent entries
+        this.loading = false;
+      },
+      error: error => {
+        console.error('Error loading diary entries', error);
+        this.loading = false;
+      }
     });
 
     // Load workout templates
-    this.templateService.getTemplates().subscribe(templates => {
-      this.workoutTemplates = templates.slice(0, 4); // Get the 4 most recent templates
+    this.templateService.getTemplates().subscribe({
+      next: templates => {
+        this.workoutTemplates = templates.slice(0, 4); // Get the 4 most recent templates
+      },
+      error: error => {
+        console.error('Error loading templates', error);
+      }
     });
+
   }
+
+
 
   getEmotionIcon(feeling: string): string {
     switch (feeling?.toLowerCase()) {
@@ -66,30 +77,40 @@ export class DashboardComponent implements OnInit{
     }
   }
 
+  // New method to start workout directly from diary
   startWorkoutFromTemplate(template: WorkoutTemplate): void {
-    // Create a new workout from template
-    const newWorkout: WorkoutSession = {
-      name: template.name,
-      startTime: new Date().toISOString(),
-      templateId: template.id,
-      exercises: template.exercises?.map(te => ({
-        exerciseId: te.exerciseId,
-        name: te.exerciseName,
-        muscleGroup: '', // Will be filled from the API
-        sets: Array(te.sets).fill(0).map((_, i) => ({
-          setNumber: i + 1,
-          weight: te.weight,
-          reps: te.reps,
-          completed: false
-        }))
-      })) || []
+    // Create a new diary entry with workout for today
+    const today = new Date().toISOString().split('T')[0];
+    const newEntry: DiaryEntry = {
+      date: today,
+      feeling: 'good', // Default feeling
+      notes: `Workout from template: ${template.name}`,
+      workoutPerformed: true,
+      workout: {
+        name: template.name,
+        startTime: new Date().toISOString(),
+        templateId: template.id,
+        exercises: template.exercises?.map(te => ({
+          exerciseId: te.exerciseId,
+          name: te.exerciseName,
+          muscleGroup: '',
+          sets: Array(te.sets).fill(0).map((_, i) => ({
+            setNumber: i + 1,
+            weight: te.weight,
+            reps: te.reps,
+            completed: false
+          }))
+        })) || []
+      }
     };
 
-    this.workoutService.createWorkoutSession(newWorkout).subscribe(
-      workout => {
-        this.router.navigate(['/workouts', workout.id]);
+    this.diaryService.createDiaryEntry(newEntry).subscribe({
+      next: entry => {
+        this.router.navigate(['/diary', entry.id]);
+      },
+      error: error => {
+        console.error('Error creating diary entry with workout', error);
       }
-    );
+    });
   }
-
 }

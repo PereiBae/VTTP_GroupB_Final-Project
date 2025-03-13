@@ -205,15 +205,44 @@
           </div>
         </div>
 
-        <!-- Spotify Section (Optional/Future Feature) -->
+        <!-- Spotify Section (Not premium exclusive) -->
         <div class="form-row spotify-section">
-          <label>Add song of the day</label>
+          <h3>Add Song of the Day</h3>
           <div class="spotify-search">
-            <button mat-raised-button color="accent" type="button">
-              <mat-icon>search</mat-icon>
-              Search Spotify
-            </button>
-            <p class="coming-soon">(Coming soon)</p>
+            <mat-form-field appearance="fill" class="full-width">
+              <mat-label>Search for a song</mat-label>
+              <input matInput [formControl]="spotifySearchControl" placeholder="Search Spotify...">
+              <mat-icon matSuffix class="spotify-icon">music_note</mat-icon>
+            </mat-form-field>
+
+            <!-- Placeholder for search results -->
+            <div class="spotify-results" *ngIf="spotifySearchResults.length > 0">
+              <div class="spotify-track-item" *ngFor="let track of spotifySearchResults" (click)="selectTrack(track)">
+                <img [src]="track.albumArt" class="track-image" alt="Album art">
+                <div class="track-info">
+                  <div class="track-name">{{track.name}}</div>
+                  <div class="track-artist">{{track.artist}}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Preview selected track -->
+            <div class="selected-track" *ngIf="selectedTrack">
+              <img [src]="selectedTrack.albumArt" class="track-image" alt="Album art">
+              <div class="track-info">
+                <div class="track-name">{{selectedTrack.name}}</div>
+                <div class="track-artist">{{selectedTrack.artist}}</div>
+              </div>
+              <button mat-icon-button color="warn" (click)="clearSelectedTrack()">
+                <mat-icon>clear</mat-icon>
+              </button>
+            </div>
+
+            <!-- Coming soon message -->
+            <div class="coming-soon-notice" *ngIf="!spotifySearchResults.length && !selectedTrack">
+              <mat-icon>schedule</mat-icon>
+              <span>Spotify integration coming in Phase 4!</span>
+            </div>
           </div>
         </div>
       </mat-card-content>

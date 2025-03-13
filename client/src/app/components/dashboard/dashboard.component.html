@@ -18,7 +18,12 @@
                 <mat-icon [ngClass]="'feeling-' + entry.feeling">
                   {{ getEmotionIcon(entry.feeling) }}
                 </mat-icon>
-                {{ entry.workoutPerformed ? 'Worked out' : 'Rest day' }}
+                <!-- Show workout info when available -->
+                <span *ngIf="entry.workoutPerformed">
+                  {{ entry.workout?.name || 'Workout' }}
+                  ({{ entry.workout?.exercises?.length || 0 }} exercises)
+                </span>
+                <span *ngIf="!entry.workoutPerformed">Rest day</span>
               </div>
               <button mat-icon-button [routerLink]="['/diary', entry.id]">
                 <mat-icon>navigate_next</mat-icon>
@@ -30,32 +35,6 @@
           </ng-template>
           <button mat-raised-button color="primary" routerLink="/diary/new">
             Add New Entry
-          </button>
-        </div>
-
-        <div class="dashboard-section">
-          <h2>Recent Workouts</h2>
-          <mat-list *ngIf="recentWorkouts.length > 0; else noWorkouts">
-            <mat-list-item *ngFor="let workout of recentWorkouts">
-              <div matListItemTitle>
-                {{ workout.name }}
-              </div>
-              <div matListItemLine>
-                {{ workout.startTime | date:'medium' }}
-              </div>
-              <div matListItemLine>
-                {{ workout.exercises.length }} exercises
-              </div>
-              <button mat-icon-button [routerLink]="['/workouts', workout.id]">
-                <mat-icon>navigate_next</mat-icon>
-              </button>
-            </mat-list-item>
-          </mat-list>
-          <ng-template #noWorkouts>
-            <p>No recent workouts.</p>
-          </ng-template>
-          <button mat-raised-button color="accent" routerLink="/workouts/new">
-            Start New Workout
           </button>
         </div>
       </div>

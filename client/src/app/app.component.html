@@ -32,21 +32,40 @@
       <a mat-list-item routerLink="/diary" (click)="sidenav.close()">
         <mat-icon>book</mat-icon> Diary
       </a>
-      <a mat-list-item routerLink="/workouts" (click)="sidenav.close()">
-        <mat-icon>fitness_center</mat-icon> Workouts
-      </a>
       <a mat-list-item routerLink="/templates" (click)="sidenav.close()">
         <mat-icon>playlist_add_check</mat-icon> Templates
       </a>
       <a mat-list-item routerLink="/exercises" (click)="sidenav.close()">
         <mat-icon>sports</mat-icon> Exercises
       </a>
-      <a mat-list-item *ngIf="isPremium" routerLink="/nutrition" (click)="sidenav.close()">
-        <mat-icon>restaurant</mat-icon> Nutrition
+
+      <!-- Non-premium features -->
+      <a mat-list-item routerLink="/social" (click)="sidenav.close()">
+        <mat-icon>forum</mat-icon> Community Chat
       </a>
-      <a mat-list-item *ngIf="isPremium" routerLink="/statistics" (click)="sidenav.close()">
-        <mat-icon>bar_chart</mat-icon> Statistics
+      <a mat-list-item routerLink="/music" (click)="sidenav.close()">
+        <mat-icon>music_note</mat-icon> Spotify Integration
       </a>
+
+      <!-- Premium features with clear indicator -->
+      <div class="premium-menu-section">
+        <div class="premium-header">
+          <mat-icon class="premium-icon">star</mat-icon>
+          Premium Features
+        </div>
+        <a mat-list-item routerLink="/nutrition" (click)="sidenav.close()"
+           [ngClass]="{'premium-locked': !isPremium}">
+          <mat-icon>restaurant</mat-icon>
+          Nutrition Tracking
+          <mat-icon *ngIf="!isPremium" class="lock-icon">lock</mat-icon>
+        </a>
+        <a mat-list-item routerLink="/statistics" (click)="sidenav.close()"
+           [ngClass]="{'premium-locked': !isPremium}">
+          <mat-icon>bar_chart</mat-icon>
+          Advanced Statistics
+          <mat-icon *ngIf="!isPremium" class="lock-icon">lock</mat-icon>
+        </a>
+      </div>
     </mat-nav-list>
   </mat-sidenav>
   <mat-sidenav-content>
