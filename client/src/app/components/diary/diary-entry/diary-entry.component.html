@@ -206,10 +206,11 @@
         </div>
 
         <!-- Spotify Section -->
+        <!-- Modify the Spotify Section in diary-entry.component.html -->
         <div class="form-row spotify-section">
           <h3>Add Song of the Day</h3>
 
-          <!-- Connect to Spotify button -->
+          <!-- Connect to Spotify button (only show if not connected) -->
           <div *ngIf="!spotifyConnected" class="spotify-connect">
             <button mat-raised-button color="accent" (click)="connectToSpotify()">
               <mat-icon>music_note</mat-icon>
@@ -218,7 +219,24 @@
             <p class="spotify-connect-info">Connect to Spotify to add songs to your diary entries</p>
           </div>
 
-          <!-- Spotify search when connected -->
+          <!-- Selected track display (show first if exists) -->
+          <div class="selected-track" *ngIf="selectedTrack">
+            <img [src]="selectedTrack.albumArt || 'assets/default-album-art.jpg'" class="track-image" alt="Album art">
+            <div class="track-info">
+              <div class="track-name">{{selectedTrack.name}}</div>
+              <div class="track-artist">{{selectedTrack.artist}} • {{selectedTrack.albumName || ''}}</div>
+            </div>
+            <div class="track-actions">
+              <button mat-icon-button color="primary" *ngIf="selectedTrack.previewUrl" (click)="playPreview()">
+                <mat-icon>play_circle</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="clearSelectedTrack()">
+                <mat-icon>clear</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <!-- Spotify search when connected (always show if connected) -->
           <div *ngIf="spotifyConnected" class="spotify-search">
             <mat-form-field appearance="fill" class="full-width">
               <mat-label>Search for a song</mat-label>
@@ -235,23 +253,6 @@
                   <div class="track-name">{{track.name}}</div>
                   <div class="track-artist">{{track.artist}} • {{track.albumName}}</div>
                 </div>
-              </div>
-            </div>
-
-            <!-- Selected track -->
-            <div class="selected-track" *ngIf="selectedTrack">
-              <img [src]="selectedTrack.albumArt" class="track-image" alt="Album art">
-              <div class="track-info">
-                <div class="track-name">{{selectedTrack.name}}</div>
-                <div class="track-artist">{{selectedTrack.artist}} • {{selectedTrack.albumName}}</div>
-              </div>
-              <div class="track-actions">
-                <button mat-icon-button color="primary" *ngIf="selectedTrack.previewUrl" (click)="playPreview()">
-                  <mat-icon>play_circle</mat-icon>
-                </button>
-                <button mat-icon-button color="warn" (click)="clearSelectedTrack()">
-                  <mat-icon>clear</mat-icon>
-                </button>
               </div>
             </div>
           </div>

@@ -70,6 +70,7 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
     this.loadTemplates();
     // Check if Spotify is connected
     this.spotifyConnected = this.spotifyService.hasValidToken();
+    console.log('Spotify connected status:', this.spotifyConnected);
 
     this.entryId = this.route.snapshot.paramMap.get('id') || undefined;
     this.isEdit = !!this.entryId;
@@ -89,28 +90,9 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
         exercises: []
       });
 
-      // Set up search debounce
-      this.spotifySearchControl.valueChanges.pipe(
-        debounceTime(500),
-        distinctUntilChanged(),
-        switchMap(query => {
-          if (!query || query.length < 3) {
-            return of([]);
-          }
-
-          this.isSearchingSpotify = true;
-          return this.spotifyService.searchTracks(query);
-        })
-      ).subscribe({
-        next: results => {
-          this.spotifySearchResults = results;
-          this.isSearchingSpotify = false;
-        },
-        error: err => {
-          console.error('Error searching Spotify:', err);
-          this.isSearchingSpotify = false;
-        }
-      });
+      if (this.spotifyConnected) {
+        this.setupSpotifySearch();
+      }
     }
 
     // React to workoutPerformed toggle
@@ -193,6 +175,30 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
             startTime: new Date().toISOString(),
             exercises: []
           });
+        }
+
+        // Create selected track object if Spotify track was attached
+        if (entry.spotifyTrackId && entry.spotifyTrackName && entry.spotifyArtistName) {
+          this.selectedTrack = {
+            id: entry.spotifyTrackId,
+            name: entry.spotifyTrackName,
+            artist: entry.spotifyArtistName,
+            albumName: 'From diary entry', // Placeholder as we don't store this
+            albumArt: 'assets/default-album-art.jpg' // Default image
+          };
+
+          // If connected to Spotify, try to get the full track details
+          if (this.spotifyConnected) {
+            this.spotifyService.getTrack(entry.spotifyTrackId).subscribe({
+              next: (trackDetails) => {
+                this.selectedTrack = trackDetails;
+              },
+              error: (err) => {
+                console.error('Could not fetch track details:', err);
+                // Keep the basic track info we already set
+              }
+            });
+          }
         }
 
         this.loading = false;
@@ -533,6 +539,36 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
       const audio = new Audio(this.selectedTrack.previewUrl);
       audio.play();
     }
+  }
+
+  setupSpotifySearch() {
+    this.spotifySearchControl.valueChanges.pipe(
+      debounceTime(500),
+      distinctUntilChanged(),
+      switchMap(query => {
+        if (!query || query.length < 3) {
+          return of([]);
+        }
+
+        this.isSearchingSpotify = true;
+        return this.spotifyService.searchTracks(query);
+      })
+    ).subscribe({
+      next: results => {
+        this.spotifySearchResults = results;
+        this.isSearchingSpotify = false;
+      },
+      error: err => {
+        console.error('Error searching Spotify:', err);
+        this.isSearchingSpotify = false;
+
+        // Handle token expiration
+        if (err.status === 401) {
+          this.spotifyConnected = false;
+          this.spotifyService.clearToken();
+        }
+      }
+    });
   }
 
 }
