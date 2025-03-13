@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BaseService } from './base.service';
-import {BehaviorSubject, map, Observable} from 'rxjs';
+import {BehaviorSubject, catchError, map, Observable, throwError} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
 import {tap} from 'rxjs/operators';
 
@@ -53,16 +53,20 @@ export class SpotifyService extends BaseService {
       );
   }
 
+  // Update SpotifyService
   searchTracks(query: string): Observable<SpotifyTrack[]> {
-    const token = this.tokenSubject.getValue();
+    const token = localStorage.getItem('spotify_token');
     if (!token) {
-      throw new Error('Spotify token not available');
+      console.error('No Spotify token available');
+      return throwError(() => new Error('No Spotify token available'));
     }
 
+    console.log('Sending search request with token');
     return this.http.get<any>(`/api/spotify/search?query=${encodeURIComponent(query)}&token=${token}`,
       { headers: this.getAuthHeaders() })
       .pipe(
         map(response => {
+          console.log('Raw Spotify response:', response);
           if (!response.tracks || !response.tracks.items) {
             return [];
           }
@@ -72,9 +76,18 @@ export class SpotifyService extends BaseService {
             name: item.name,
             artist: item.artists[0].name,
             albumName: item.album.name,
-            albumArt: item.album.images[1]?.url || '', // Medium size image
+            albumArt: item.album.images[1]?.url || '',
             previewUrl: item.preview_url
           }));
+        }),
+        catchError(error => {
+          console.error('Spotify API error:', error);
+          // Handle token expiration
+          if (error.status === 401) {
+            localStorage.removeItem('spotify_token');
+            this.tokenSubject.next(null);
+          }
+          return throwError(() => error);
         })
       );
   }

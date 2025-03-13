@@ -5,7 +5,7 @@ import {DiaryService} from '../../../services/diary.service';
 import {ActivatedRoute, Router} from '@angular/router';
 import {MatDialog} from '@angular/material/dialog';
 import {DiaryEntry} from '../../../models/diary-entry';
-import {debounceTime, distinctUntilChanged, Observable, of, Subject, takeUntil} from 'rxjs';
+import {catchError, debounceTime, distinctUntilChanged, Observable, of, Subject, Subscription, takeUntil} from 'rxjs';
 import {WorkoutTemplate} from '../../../models/workout-template';
 import {TemplateService} from '../../../services/template.service';
 import {AuthService} from '../../../services/auth.service';
@@ -36,7 +36,6 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
   isEdit = false;
   entryId?: string;
   loading = false;
-  spotifyTrackSelected = false
 
   workoutSelected = false;
   templates: WorkoutTemplate[] = [];
@@ -66,6 +65,10 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
   }
 
   ngOnInit(): void {
+
+    // Add debugging logs
+    console.log('Component initialized, checking Spotify connection...');
+
     this.createForms();
     this.loadTemplates();
     // Check if Spotify is connected
@@ -74,6 +77,8 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
 
     this.entryId = this.route.snapshot.paramMap.get('id') || undefined;
     this.isEdit = !!this.entryId;
+
+    this.checkSpotifyConnection();
 
     if (this.isEdit && this.entryId) {
       this.loadDiaryEntry(this.entryId);
@@ -90,9 +95,7 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
         exercises: []
       });
 
-      if (this.spotifyConnected) {
-        this.setupSpotifySearch();
-      }
+      this.setupSpotifySearch()
     }
 
     // React to workoutPerformed toggle
@@ -111,6 +114,11 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
   }
 
   ngOnDestroy(): void {
+
+    if (this.spotifySearchSubscription) {
+      this.spotifySearchSubscription.unsubscribe();
+    }
+
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -541,34 +549,62 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
     }
   }
 
-  setupSpotifySearch() {
-    this.spotifySearchControl.valueChanges.pipe(
-      debounceTime(500),
-      distinctUntilChanged(),
-      switchMap(query => {
-        if (!query || query.length < 3) {
-          return of([]);
-        }
+  checkSpotifyConnection() {
+    const token = localStorage.getItem('spotify_token');
+    console.log('Spotify token exists:', !!token);
+    this.spotifyConnected = !!token;
 
-        this.isSearchingSpotify = true;
-        return this.spotifyService.searchTracks(query);
-      })
-    ).subscribe({
-      next: results => {
-        this.spotifySearchResults = results;
-        this.isSearchingSpotify = false;
-      },
-      error: err => {
-        console.error('Error searching Spotify:', err);
-        this.isSearchingSpotify = false;
-
-        // Handle token expiration
-        if (err.status === 401) {
-          this.spotifyConnected = false;
-          this.spotifyService.clearToken();
-        }
-      }
-    });
+    // If connected but token might be expired, validate it
+    if (this.spotifyConnected) {
+      // Optional: Add token validation call
+    }
   }
+
+  setupSpotifySearch() {
+    console.log('Setting up Spotify search...');
+
+    // Unsubscribe from any existing subscription first
+    if (this.spotifySearchSubscription) {
+      this.spotifySearchSubscription.unsubscribe();
+    }
+
+    this.spotifySearchSubscription = this.spotifySearchControl.valueChanges
+      .pipe(
+        debounceTime(500),
+        distinctUntilChanged(),
+        switchMap(query => {
+          console.log('Search query:', query);
+          if (!query || query.length < 3) {
+            return of([]);
+          }
+
+          this.isSearchingSpotify = true;
+          console.log('Searching Spotify for:', query);
+          // Add explicit error handling
+          return this.spotifyService.searchTracks(query).pipe(
+            catchError(error => {
+              console.error('Spotify search error:', error);
+              this.isSearchingSpotify = false;
+              return of([]);
+            })
+          );
+        })
+      )
+      .subscribe({
+        next: results => {
+          console.log('Search results:', results);
+          this.spotifySearchResults = results;
+          this.isSearchingSpotify = false;
+        },
+        error: err => {
+          console.error('Observable error:', err);
+          this.isSearchingSpotify = false;
+        }
+      });
+  }
+
+// Don't forget to add this property and cleanup
+  private spotifySearchSubscription: Subscription | null = null;
+
 
 }
