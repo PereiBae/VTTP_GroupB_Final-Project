@@ -474,28 +474,65 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
 
   // Exercise search
   openExerciseSearch(): void {
-    // Before adding a new exercise, let's save the current state of existing exercises
-    const currentExercises = this.exercises.controls.map(control => ({
+    // Store all current exercise data including sets
+    const exerciseValues = this.exercises.controls.map(control => ({
       name: control.get('name')?.value,
       muscleGroup: control.get('muscleGroup')?.value,
-      exerciseId: control.get('exerciseId')?.value
+      exerciseId: control.get('exerciseId')?.value,
+      sets: (control.get('sets') as FormArray).controls.map(setControl => ({
+        weight: setControl.get('weight')?.value,
+        reps: setControl.get('reps')?.value,
+        rpe: setControl.get('rpe')?.value,
+        completed: setControl.get('completed')?.value
+      }))
     }));
 
-    // Add the new exercise
-    this.addExercise();
+    // Create a completely new exercise
+    const newExercise: ExerciseLog = {
+      exerciseId: '',
+      name: 'New Exercise',
+      muscleGroup: '',
+      sets: [{
+        setNumber: 1,
+        weight: 0,
+        reps: 0,
+        rpe: undefined,
+        completed: false
+      }]
+    };
 
-    // After adding the exercise, restore the previous exercise names
+    // Add the exercise directly through the store
+    this.workoutStore.addExercise(newExercise);
+
+    // Use a slightly longer timeout to ensure the DOM has updated
     setTimeout(() => {
-      // Skip the last exercise (the newly added one)
-      for (let i = 0; i < currentExercises.length; i++) {
+      // Restore all exercise data EXCEPT for the newly added one
+      for (let i = 0; i < exerciseValues.length; i++) {
         const exerciseForm = this.exercises.at(i);
         if (exerciseForm) {
-          exerciseForm.get('name')?.setValue(currentExercises[i].name);
-          exerciseForm.get('muscleGroup')?.setValue(currentExercises[i].muscleGroup);
-          exerciseForm.get('exerciseId')?.setValue(currentExercises[i].exerciseId);
+          // Restore basic exercise info
+          exerciseForm.get('name')?.setValue(exerciseValues[i].name);
+          exerciseForm.get('muscleGroup')?.setValue(exerciseValues[i].muscleGroup);
+          exerciseForm.get('exerciseId')?.setValue(exerciseValues[i].exerciseId);
+
+          // Restore all sets data
+          const setsArray = exerciseForm.get('sets') as FormArray;
+          exerciseValues[i].sets.forEach((setValue, setIndex) => {
+            if (setIndex < setsArray.length) {
+              const setForm = setsArray.at(setIndex);
+              setForm.get('weight')?.setValue(setValue.weight);
+              setForm.get('reps')?.setValue(setValue.reps);
+              setForm.get('rpe')?.setValue(setValue.rpe);
+              setForm.get('completed')?.setValue(setValue.completed);
+            }
+          });
         }
       }
-    }, 0);
+
+      // Expand the newly added exercise panel
+      this.expandedExercises[this.exercises.length - 1] = true;
+      this.restoreExpansionState();
+    }, 20); // Slightly longer timeout to ensure DOM update
   }
 
   // Save the diary entry and workout if applicable
@@ -714,32 +751,36 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
   private spotifySearchSubscription: Subscription | null = null;
 
   // Helper method to save the current expansion state of all panels
+  // Replace the existing saveExpansionState method
   private saveExpansionState(): void {
-    // Save expansion state for each exercise panel
-    for (let i = 0; i < this.exercises.length; i++) {
-      const panel = document.querySelector(`mat-expansion-panel:nth-child(${i + 1})`) as HTMLElement;
-      if (panel) {
-        // Check if the panel has the 'expanded' class or any other way to determine if it's expanded
-        this.expandedExercises[i] = panel.classList.contains('mat-expanded');
-      }
-    }
+    // We're already tracking expansion state through the expandedExercises object
+    // No need to check DOM directly, just preserve the current state
+    this.expandedExercises = {...this.expandedExercises};
   }
 
-  // Helper method to restore the expansion state after form updates
+// Replace the existing restoreExpansionState method
   private restoreExpansionState(): void {
-    // Find all expansion panels and set their expansion state
-    for (let i = 0; i < this.exercises.length; i++) {
-      if (this.expandedExercises[i]) {
-        const panel = document.querySelector(`mat-expansion-panel:nth-child(${i + 1})`) as HTMLElement;
-        if (panel && !panel.classList.contains('mat-expanded')) {
-          // Find and click the header to expand it if it's not already expanded
+    // Wait for next change detection cycle to ensure panels are rendered
+    setTimeout(() => {
+      const panelElements = document.querySelectorAll('mat-expansion-panel');
+
+      for (let i = 0; i < this.exercises.length; i++) {
+        const panel = panelElements[i] as HTMLElement;
+        if (!panel) continue;
+
+        const isCurrentlyExpanded = panel.classList.contains('mat-expanded');
+        const shouldBeExpanded = this.expandedExercises[i] === true;
+
+        // Only toggle if the current state doesn't match the desired state
+        if (shouldBeExpanded && !isCurrentlyExpanded) {
           const header = panel.querySelector('.mat-expansion-panel-header') as HTMLElement;
-          if (header) {
-            header.click();
-          }
+          if (header) header.click();
+        } else if (!shouldBeExpanded && isCurrentlyExpanded) {
+          const header = panel.querySelector('.mat-expansion-panel-header') as HTMLElement;
+          if (header) header.click();
         }
       }
-    }
+    }, 0);
   }
 
   // Helper method to fix set numbers after adding/removing sets
@@ -756,5 +797,9 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
     this.expandedExercises[exerciseIndex] = isExpanded;
   }
 
+  // Add this method to your component class
+  trackByIndex(index: number): number {
+    return index;
+  }
 
 }

@@ -117,7 +117,7 @@
 
             <div formArrayName="exercises">
               <mat-accordion #accordion>
-                <mat-expansion-panel *ngFor="let exercise of exercises.controls; let i = index"
+                <mat-expansion-panel *ngFor="let exercise of exercises.controls; let i = index; trackBy: trackByIndex"
                                      [formGroupName]="i"
                                      (opened)="onPanelToggle(i, true)"
                                      (closed)="onPanelToggle(i, false)"
