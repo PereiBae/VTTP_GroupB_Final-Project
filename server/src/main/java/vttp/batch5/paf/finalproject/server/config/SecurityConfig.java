@@ -23,15 +23,23 @@ public class SecurityConfig{
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/auth/login","/api/auth/register").permitAll() // Updated for Spring Security 6
+        // Disable CSRF for API endpoints
+        http.csrf(AbstractHttpConfigurer::disable);
+
+        http.authorizeHttpRequests(authorize -> authorize
+                        // Allow login and registration without authentication
+                        .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                        // Allow WebSocket connections
+                        .requestMatchers("/ws/**").permitAll()
+                        // Require authentication for all other requests
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-        http.csrf(csrf -> csrf.ignoringRequestMatchers("/ws/**"));
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
+        // Add JWT filter
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 

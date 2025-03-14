@@ -32,6 +32,8 @@ export class ChatService {
   public connected$: Observable<boolean> = this.connectedSubject.asObservable();
 
   private username: string = '';
+  // Configurable WebSocket URL - can be set from environment
+  private wsUrl = 'http://localhost:8080/ws';
 
   constructor(private authService: AuthService) {
     this,this.initializeUsername()
@@ -76,9 +78,11 @@ export class ChatService {
       this.disconnect();
     }
 
+    console.log('Connecting to WebSocket at:', this.wsUrl);
+
     // Create a new STOMP client
     this.client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+      webSocketFactory: () => new SockJS(this.wsUrl),
       debug: (msg) => {
         console.log('STOMP: ' + msg);
       },
@@ -94,9 +98,13 @@ export class ChatService {
 
       // Subscribe to the public channel
       this.client?.subscribe('/topic/public', (message: IMessage) => {
-        const newMessage: ChatMessage = JSON.parse(message.body);
-        const currentMessages = this.messagesSubject.getValue();
-        this.messagesSubject.next([...currentMessages, newMessage]);
+        try {
+          const newMessage: ChatMessage = JSON.parse(message.body);
+          const currentMessages = this.messagesSubject.getValue();
+          this.messagesSubject.next([...currentMessages, newMessage]);
+        } catch (e) {
+          console.error('Error parsing message:', e, message.body);
+        }
       });
 
       // Send join message
