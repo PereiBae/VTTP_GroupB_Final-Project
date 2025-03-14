@@ -1,0 +1,41 @@
+<div class="chat-container">
+  <div class="chat-header">
+    <h1>Community Chat</h1>
+    <div class="connection-status" [class.connected]="isConnected">
+      <span class="status-dot"></span>
+      <span>{{ isConnected ? 'Connected' : 'Connecting...' }}</span>
+    </div>
+  </div>
+
+  <div class="chat-messages">
+    <div *ngFor="let message of messages" class="message" [ngClass]="getMessageClass(message)">
+      <div *ngIf="message.type === 'CHAT'" class="message-content">
+        <div class="sender">{{ message.sender }}</div>
+        <div class="text">{{ message.content }}</div>
+        <div class="time">{{ message.timestamp | date:'short' }}</div>
+      </div>
+
+      <div *ngIf="message.type === 'JOIN' || message.type === 'LEAVE'" class="system-message">
+        <span class="username">{{ message.sender }}</span> {{ message.content }}
+      </div>
+    </div>
+
+    <div *ngIf="messages.length === 0" class="no-messages">
+      No messages yet. Be the first to say hello!
+    </div>
+  </div>
+
+  <div class="chat-input">
+    <form (ngSubmit)="sendMessage()">
+      <mat-form-field appearance="outline" class="message-field">
+        <input matInput [formControl]="messageInput" placeholder="Type a message..."
+               [disabled]="!isConnected">
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" type="submit"
+              [disabled]="messageInput.invalid || !isConnected">
+        <mat-icon>send</mat-icon>
+      </button>
+    </form>
+  </div>
+</div>

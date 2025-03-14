@@ -86,4 +86,8 @@ export class AuthService {
     this.updatePremiumStatus();
   }
 
+  decodeToken(token: string): JwtPayload {
+    return jwtDecode<JwtPayload>(token);
+  }
+
 }

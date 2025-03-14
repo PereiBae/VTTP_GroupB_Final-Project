@@ -27,9 +27,9 @@ import {TemplateListComponent} from './components/template/template-list/templat
 import {WorkoutListComponent} from './components/workout/workout-list/workout-list.component';
 import {WorkoutSessionComponent} from './components/workout/workout-session/workout-session.component';
 import {StatisticComponent} from './components/statistics/statistic/statistic.component';
-import {SocialChatComponent} from './components/chat/social-chat/social-chat.component';
 import {SpotifyCallBackComponent} from './components/spotify-call-back/spotify-call-back.component';
 import {PaymentSuccessComponent} from './components/payments/payment-success/payment-success.component';
+import {ChatComponent} from './components/chat/chat/chat.component';
 
 const appRoutes: Routes = [
   { path: '', component: LoginComponent, canActivate: [AlreadyLoggedInGuard]},
@@ -59,7 +59,7 @@ const appRoutes: Routes = [
   { path: 'profile', component: ProfileFormComponent, canActivate: [AuthGuard] },
 
   // Social Route
-  { path: 'social', component: SocialChatComponent, canActivate: [AuthGuard] },
+  { path: 'chat', component: ChatComponent, canActivate: [AuthGuard] },
 
   // Payment Routes
   { path: 'payment/success', component: PaymentSuccessComponent, canActivate: [AuthGuard] },
@@ -93,9 +93,9 @@ const appRoutes: Routes = [
     WorkoutListComponent,
     WorkoutSessionComponent,
     StatisticComponent,
-    SocialChatComponent,
     SpotifyCallBackComponent,
-    PaymentSuccessComponent
+    PaymentSuccessComponent,
+    ChatComponent
   ],
   imports: [
     BrowserModule,
