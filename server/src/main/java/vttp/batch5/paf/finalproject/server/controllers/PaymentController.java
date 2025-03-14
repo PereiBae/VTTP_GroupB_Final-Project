@@ -83,16 +83,24 @@ public class PaymentController {
             @RequestParam String sessionId,
             Authentication authentication) {
 
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "User not authenticated"));
+        }
+
+        String email = authentication.getName();
+        System.out.println("Authenticated user email: " + email); // Debug log
+
         try {
             Session session = Session.retrieve(sessionId);
             String status = session.getStatus();
 
             // If the payment was successful, upgrade the user
             if ("complete".equals(status)) {
-                myUserDetailsService.upgradeToPremium(authentication.getName());
+                boolean upgraded = myUserDetailsService.upgradeToPremium(email);
                 return ResponseEntity.ok(Map.of(
                         "status", status,
-                        "isPremium", true
+                        "isPremium", upgraded
                 ));
             }
 

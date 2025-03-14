@@ -26,15 +26,16 @@ public class MyUserDetailsRepository {
 
     private final String SELECT_USER="SELECT email, password, is_premium FROM users WHERE email = ?";
     private final String INSERT_USER = "INSERT INTO users (email, password) VALUES (?, ?)";
-    private final String UPDATE_PREMIUM = "UPDATE users SET is_premium = ? WHERE email = ?";
+    private final String UPDATE_PREMIUM = "UPDATE users SET is_premium = true WHERE email = ?";
     private final String CHECK_PREMIUM = "SELECT is_premium FROM users WHERE email = ?";
 
+    // Fix for MyUserDetailsRepository.java
     @Transactional
     public boolean upgradeToPremium(String email) {
-        // Update user's premium status in database
+        // You're likely missing the email parameter in the update call
         int updated = jdbcTemplate.update(
                 UPDATE_PREMIUM,
-                email);
+                email);  // Make sure to pass the email parameter here
 
         return updated > 0;
     }

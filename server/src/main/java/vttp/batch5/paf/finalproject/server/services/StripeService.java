@@ -91,6 +91,13 @@ public class StripeService {
             product = Product.create(productParams);
         }
 
+        // Convert string interval to enum value
+        PriceCreateParams.Recurring.Interval intervalEnum = switch (interval.toLowerCase()) {
+            case "month" -> PriceCreateParams.Recurring.Interval.MONTH;
+            case "year" -> PriceCreateParams.Recurring.Interval.YEAR;
+            default -> throw new IllegalArgumentException("Unsupported interval: " + interval);
+        };
+
         // Create a price for the product
         PriceCreateParams priceParams = PriceCreateParams.builder()
                 .setCurrency("usd")
@@ -98,7 +105,7 @@ public class StripeService {
                 .setUnitAmount(unitAmount)
                 .setRecurring(
                         PriceCreateParams.Recurring.builder()
-                                .setInterval(PriceCreateParams.Recurring.Interval.valueOf(interval))
+                                .setInterval(intervalEnum)
                                 .build()
                 )
                 .build();

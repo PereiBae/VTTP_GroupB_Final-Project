@@ -37,20 +37,23 @@ export class PaymentSuccessComponent implements OnInit{
     });
   }
 
+  // Update in payment-success.component.ts
   verifyPayment(sessionId: string) {
+    // Make sure you're properly passing auth headers
     this.paymentService.getSessionStatus(sessionId).subscribe({
       next: (response) => {
         this.loading = false;
         this.success = response.isPremium;
 
         if (this.success) {
-          // Refresh the JWT token to include premium role
           this.refreshToken();
         } else {
           this.errorMessage = 'Payment was processed but premium status update failed.';
         }
       },
       error: (error) => {
+        // Log the entire error for debugging
+        console.error('Payment verification error:', error);
         this.loading = false;
         this.success = false;
         this.errorMessage = error.error?.message || 'An error occurred while verifying payment';

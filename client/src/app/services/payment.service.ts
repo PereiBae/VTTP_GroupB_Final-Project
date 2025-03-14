@@ -61,10 +61,15 @@ export class PaymentService extends BaseService{
     this.stripe.redirectToCheckout({ sessionId });
   }
 
+  // Check PaymentService.ts
   getSessionStatus(sessionId: string): Observable<{status: string, isPremium: boolean}> {
+    // Ensure authentication headers are included
+    const headers = this.getAuthHeaders();
+    console.log('Auth headers for session status:', headers);
+
     return this.http.get<{status: string, isPremium: boolean}>(
       `/api/payment/session-status?sessionId=${sessionId}`,
-      { headers: this.getAuthHeaders() }
+      { headers: headers }
     );
   }
 
