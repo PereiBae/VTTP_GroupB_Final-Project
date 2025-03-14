@@ -28,6 +28,7 @@ export class AppComponent implements OnInit{
   logout() {
     localStorage.removeItem('jwt');
     localStorage.removeItem('spotify_token');
+    this.authService.clearToken();
     this.isLoggedIn = false;
     this.isPremium = false;
     this.router.navigate(['/']);

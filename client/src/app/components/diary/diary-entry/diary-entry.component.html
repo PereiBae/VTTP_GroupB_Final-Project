@@ -116,8 +116,12 @@
             </div>
 
             <div formArrayName="exercises">
-              <mat-accordion>
-                <mat-expansion-panel *ngFor="let exercise of exerciseControls; let i = index" [formGroupName]="i">
+              <mat-accordion #accordion>
+                <mat-expansion-panel *ngFor="let exercise of exercises.controls; let i = index"
+                                     [formGroupName]="i"
+                                     (opened)="onPanelToggle(i, true)"
+                                     (closed)="onPanelToggle(i, false)"
+                                     [expanded]="expandedExercises[i]">
                   <mat-expansion-panel-header>
                     <mat-panel-title>
                       {{ exercise.get('name')?.value || 'New Exercise' }}
@@ -158,32 +162,33 @@
                         <span class="set-col">{{ j + 1 }}</span>
 
                         <span class="weight-col">
-                          <mat-form-field appearance="outline">
-                            <input matInput type="number" formControlName="weight" min="0">
-                          </mat-form-field>
-                        </span>
+              <mat-form-field appearance="outline">
+                <input matInput type="number" formControlName="weight" min="0">
+              </mat-form-field>
+            </span>
 
                         <span class="reps-col">
-                          <mat-form-field appearance="outline">
-                            <input matInput type="number" formControlName="reps" min="0">
-                          </mat-form-field>
-                        </span>
+              <mat-form-field appearance="outline">
+                <input matInput type="number" formControlName="reps" min="0">
+              </mat-form-field>
+            </span>
 
                         <span class="rpe-col">
-                          <mat-form-field appearance="outline">
-                            <input matInput type="number" formControlName="rpe" min="1" max="10">
-                          </mat-form-field>
-                        </span>
+              <mat-form-field appearance="outline">
+                <input matInput type="number" formControlName="rpe" min="1" max="10">
+              </mat-form-field>
+            </span>
 
                         <span class="completed-col">
-                          <mat-checkbox formControlName="completed"></mat-checkbox>
-                        </span>
+              <mat-checkbox formControlName="completed"></mat-checkbox>
+            </span>
 
                         <span class="actions-col">
-                          <button mat-icon-button color="warn" type="button" (click)="removeSet(i, j)" *ngIf="getExerciseSets(i).length > 1">
-                            <mat-icon>remove_circle</mat-icon>
-                          </button>
-                        </span>
+              <button mat-icon-button color="warn" type="button" (click)="removeSet(i, j)"
+                      *ngIf="getExerciseSets(i).length > 1">
+                <mat-icon>remove_circle</mat-icon>
+              </button>
+            </span>
                       </div>
                     </div>
 

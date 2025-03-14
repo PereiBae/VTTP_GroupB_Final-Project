@@ -1,5 +1,5 @@
-import {Injectable} from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import {Injectable, OnDestroy} from '@angular/core';
+import {BehaviorSubject, Observable, Subscription} from 'rxjs';
 import SockJS from 'sockjs-client';
 import {Client} from '@stomp/stompjs';
 import { AuthService } from './auth.service';
@@ -23,7 +23,7 @@ export interface ChatMessage {
 @Injectable({
   providedIn: 'root'
 })
-export class ChatService {
+export class ChatService implements OnDestroy{
 
   private client: Client | null = null;
   private messagesSubject = new BehaviorSubject<ChatMessage[]>([]);
@@ -34,9 +34,38 @@ export class ChatService {
   private username: string = '';
   // Configurable WebSocket URL - can be set from environment
   private wsUrl = 'http://localhost:8080/ws';
+  private authSubscription: Subscription;
 
   constructor(private authService: AuthService) {
     this.initializeUsername();
+
+    // Subscribe to auth state changes to update username when token changes
+    this.authSubscription = this.authService.authStateChanged$.subscribe(() => {
+      console.log('Auth state changed, updating username');
+
+      // If we're connected, disconnect first (with old username)
+      if (this.isConnected()) {
+        this.disconnect();
+      }
+
+      // Update the username with the new token
+      this.initializeUsername();
+
+      // Reconnect with the new username if we were connected before
+      if (this.authService.getToken()) {
+        this.connect();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    // Clean up the subscription when the service is destroyed
+    if (this.authSubscription) {
+      this.authSubscription.unsubscribe();
+    }
+
+    // Also disconnect from WebSocket
+    this.disconnect();
   }
 
   private initializeUsername(): void {

@@ -15,10 +15,15 @@ export class AuthService {
 
   private premiumStatusSubject = new BehaviorSubject<boolean>(false);
   public premiumStatus$ = this.premiumStatusSubject.asObservable();
+  // Add a subject to broadcast auth state changes
+  private authStateSubject = new BehaviorSubject<boolean>(false);
+  public authStateChanged$ = this.authStateSubject.asObservable();
 
   constructor() {
     // Initialize premium status from token
     this.updatePremiumStatus();
+    // Initialize auth state
+    this.authStateSubject.next(!!this.getToken())
   }
 
   getToken(): string | null {
@@ -78,12 +83,14 @@ export class AuthService {
   setToken(token: string): void {
     localStorage.setItem('jwt', token);
     this.updatePremiumStatus();
+    this.authStateSubject.next(true);
   }
 
   // Clear token and update premium status on logout
   clearToken(): void {
     localStorage.removeItem('jwt');
     this.updatePremiumStatus();
+    this.authStateSubject.next(false);
   }
 
   decodeToken(token: string): JwtPayload {

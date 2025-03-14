@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {FormArray, FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
 import {WorkoutSession} from '../../../models/workout-session';
 import {DiaryService} from '../../../services/diary.service';
@@ -14,6 +14,7 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 import {ExerciseLog, ExerciseSet} from '../../../models/exercise-log';
 import {SpotifyService, SpotifyTrack} from '../../../services/spotify.service';
 import {switchMap} from 'rxjs/operators';
+import {MatAccordion} from '@angular/material/expansion';
 
 @Component({
   selector: 'app-diary-entry',
@@ -23,6 +24,12 @@ import {switchMap} from 'rxjs/operators';
   providers:[WorkoutStore]
 })
 export class DiaryEntryComponent implements OnInit, OnDestroy{
+
+  // Add ViewChild to reference MatAccordion for expansion panel control
+  @ViewChild(MatAccordion) accordion!: MatAccordion;
+
+  // Track the expansion state of each exercise panel
+  expandedExercises: { [index: number]: boolean } = {};
 
   // Add inside the class
   spotifySearchControl = new FormControl('');
@@ -317,11 +324,27 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
     });
   }
 
-  // Modify addExercise method
+  // FIXED: Add an exercise without resetting the form
   addExercise(): void {
+    // Save the current expansion state
+    this.saveExpansionState();
+
+    // Save current exercise form values
+    const exerciseValues = this.exercises.controls.map(control => ({
+      name: control.get('name')?.value,
+      muscleGroup: control.get('muscleGroup')?.value,
+      exerciseId: control.get('exerciseId')?.value,
+      sets: (control.get('sets') as FormArray).controls.map(setControl => ({
+        weight: setControl.get('weight')?.value,
+        reps: setControl.get('reps')?.value,
+        rpe: setControl.get('rpe')?.value,
+        completed: setControl.get('completed')?.value
+      }))
+    }));
+
     const newExercise: ExerciseLog = {
       exerciseId: '',
-      name: 'New Exercise', // Ensure this default name is preserved
+      name: 'New Exercise',
       muscleGroup: '',
       sets: [{
         setNumber: 1,
@@ -333,7 +356,39 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
     };
 
     this.workoutStore.addExercise(newExercise);
+
+    // After update completes, restore form values and auto-expand the new exercise
+    setTimeout(() => {
+      // Restore previous values for existing exercises
+      exerciseValues.forEach((values, index) => {
+        const exerciseForm = this.exercises.at(index);
+        if (exerciseForm) {
+          exerciseForm.get('name')?.setValue(values.name);
+          exerciseForm.get('muscleGroup')?.setValue(values.muscleGroup);
+          exerciseForm.get('exerciseId')?.setValue(values.exerciseId);
+
+          // Restore set values
+          const setsArray = exerciseForm.get('sets') as FormArray;
+          values.sets.forEach((setValue, setIndex) => {
+            if (setIndex < setsArray.length) {
+              const setForm = setsArray.at(setIndex);
+              setForm.get('weight')?.setValue(setValue.weight);
+              setForm.get('reps')?.setValue(setValue.reps);
+              setForm.get('rpe')?.setValue(setValue.rpe);
+              setForm.get('completed')?.setValue(setValue.completed);
+            }
+          });
+        }
+      });
+
+      // Restore expansion states
+      this.restoreExpansionState();
+
+      // Auto-expand the newly added exercise
+      this.expandedExercises[this.exercises.length - 1] = true;
+    }, 10);
   }
+
 
   // Remove an exercise
   removeExercise(index: number): void {
@@ -342,16 +397,25 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
 
   // Add a new set to an exercise
   addSet(exerciseIndex: number): void {
-    const exerciseSets = this.getExerciseSets(exerciseIndex);
+    // Save the current expansion state
+    this.saveExpansionState();
+
+    // Get current form values before updating
     const exerciseForm = this.exercises.at(exerciseIndex);
     const exerciseName = exerciseForm.get('name')?.value;
-    const lastSet = exerciseSets.at(exerciseSets.length - 1)?.value;
+    const exerciseMuscleGroup = exerciseForm.get('muscleGroup')?.value;
 
+    // Get last set values to copy for the new set
+    const exerciseSets = this.getExerciseSets(exerciseIndex);
+    const lastSetIndex = exerciseSets.length - 1;
+    const lastSet = lastSetIndex >= 0 ? exerciseSets.at(lastSetIndex).value : null;
+
+    // Create new set with values copied from the last set
     const newSet: ExerciseSet = {
       setNumber: exerciseSets.length + 1,
       weight: lastSet?.weight || 0,
       reps: lastSet?.reps || 0,
-      rpe: undefined,
+      rpe: lastSet?.rpe || undefined,
       completed: false
     };
 
@@ -361,19 +425,51 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
       set: newSet
     });
 
-    // Preserve the exercise name by setting it after a small delay
-    // This ensures the form has been updated by the store first
+    // After a slight delay to allow the store update to complete...
     setTimeout(() => {
+      // Restore previous values
       const updatedExerciseForm = this.exercises.at(exerciseIndex);
-      if (updatedExerciseForm && exerciseName) {
-        updatedExerciseForm.get('name')?.patchValue(exerciseName);
+      if (updatedExerciseForm) {
+        updatedExerciseForm.get('name')?.setValue(exerciseName);
+        updatedExerciseForm.get('muscleGroup')?.setValue(exerciseMuscleGroup);
       }
-    }, 0);
+
+      // Restore the expansion states
+      this.restoreExpansionState();
+
+      // Ensure all sets have proper setNumber values
+      this.fixSetNumbers(exerciseIndex);
+    }, 10);
   }
 
-  // Remove a set from an exercise
+  // FIXED: Remove a set without closing the expansion panel
   removeSet(exerciseIndex: number, setIndex: number): void {
+    // Save the current expansion state
+    this.saveExpansionState();
+
+    // Get current values before updating
+    const exerciseForm = this.exercises.at(exerciseIndex);
+    const exerciseName = exerciseForm.get('name')?.value;
+    const exerciseMuscleGroup = exerciseForm.get('muscleGroup')?.value;
+
+    // Remove the set
     this.workoutStore.removeSet({ exerciseIndex, setIndex });
+
+    // After a slight delay to allow the store update to complete...
+    setTimeout(() => {
+      // Restore previous values
+      const updatedExerciseForm = this.exercises.at(exerciseIndex);
+      if (updatedExerciseForm) {
+        updatedExerciseForm.get('name')?.setValue(exerciseName);
+        updatedExerciseForm.get('muscleGroup')?.setValue(exerciseMuscleGroup);
+      }
+
+      // Restore the expansion states
+      this.restoreExpansionState();
+
+      // Ensure all sets have proper setNumber values
+      this.fixSetNumbers(exerciseIndex);
+    }, 10);
   }
 
   // Exercise search
@@ -616,6 +712,49 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
 
 // Don't forget to add this property and cleanup
   private spotifySearchSubscription: Subscription | null = null;
+
+  // Helper method to save the current expansion state of all panels
+  private saveExpansionState(): void {
+    // Save expansion state for each exercise panel
+    for (let i = 0; i < this.exercises.length; i++) {
+      const panel = document.querySelector(`mat-expansion-panel:nth-child(${i + 1})`) as HTMLElement;
+      if (panel) {
+        // Check if the panel has the 'expanded' class or any other way to determine if it's expanded
+        this.expandedExercises[i] = panel.classList.contains('mat-expanded');
+      }
+    }
+  }
+
+  // Helper method to restore the expansion state after form updates
+  private restoreExpansionState(): void {
+    // Find all expansion panels and set their expansion state
+    for (let i = 0; i < this.exercises.length; i++) {
+      if (this.expandedExercises[i]) {
+        const panel = document.querySelector(`mat-expansion-panel:nth-child(${i + 1})`) as HTMLElement;
+        if (panel && !panel.classList.contains('mat-expanded')) {
+          // Find and click the header to expand it if it's not already expanded
+          const header = panel.querySelector('.mat-expansion-panel-header') as HTMLElement;
+          if (header) {
+            header.click();
+          }
+        }
+      }
+    }
+  }
+
+  // Helper method to fix set numbers after adding/removing sets
+  private fixSetNumbers(exerciseIndex: number): void {
+    const exerciseSets = this.getExerciseSets(exerciseIndex);
+    for (let i = 0; i < exerciseSets.length; i++) {
+      // Update the setNumber field to match the array index + 1
+      exerciseSets.at(i).get('setNumber')?.setValue(i + 1);
+    }
+  }
+
+  // Track expansion state when a panel is toggled manually
+  onPanelToggle(exerciseIndex: number, isExpanded: boolean): void {
+    this.expandedExercises[exerciseIndex] = isExpanded;
+  }
 
 
 }
