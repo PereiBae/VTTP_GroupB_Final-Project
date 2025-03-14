@@ -28,8 +28,7 @@
   <div class="chat-input">
     <form (ngSubmit)="sendMessage()">
       <mat-form-field appearance="outline" class="message-field">
-        <input matInput [formControl]="messageInput" placeholder="Type a message..."
-               [disabled]="!isConnected">
+        <input matInput [formControl]="messageInput" placeholder="Type a message...">
       </mat-form-field>
 
       <button mat-raised-button color="primary" type="submit"

@@ -31,6 +31,11 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.connectionSubscription = this.chatService.connected$.subscribe(
       connected => {
         this.isConnected = connected;
+        if (connected) {
+          this.messageInput.enable();
+        } else {
+          this.messageInput.disable();
+        }
       }
     );
 

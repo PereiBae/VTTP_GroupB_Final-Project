@@ -1,7 +1,16 @@
 import {inject, Injectable} from '@angular/core';
-import {BehaviorSubject, Observable} from 'rxjs';
-import {AuthService} from './auth.service';
-import {Stomp} from '@stomp/stompjs';
+import { BehaviorSubject, Observable } from 'rxjs';
+import SockJS from 'sockjs-client';
+import { Client, IMessage } from '@stomp/stompjs';
+import { AuthService } from './auth.service';
+
+export interface ChatMessage {
+  id?: string;
+  sender: string;
+  content: string;
+  timestamp?: string;
+  type: 'CHAT' | 'JOIN' | 'LEAVE';
+}
 
 export interface ChatMessage {
   id?: string;
@@ -16,7 +25,7 @@ export interface ChatMessage {
 })
 export class ChatService {
 
-  private stompClient: any;
+  private client: Client | null = null;
   private messagesSubject = new BehaviorSubject<ChatMessage[]>([]);
   public messages$: Observable<ChatMessage[]> = this.messagesSubject.asObservable();
   private connectedSubject = new BehaviorSubject<boolean>(false);
@@ -24,17 +33,16 @@ export class ChatService {
 
   private username: string = '';
 
-  private authService = inject(AuthService)
+  constructor(private authService: AuthService) {
+    this,this.initializeUsername()
+  }
 
-  connect(): void {
-    const socket = new WebSocket('http://localhost:8080/ws');
-    this.stompClient = Stomp.over(socket);
-
-    // Attempt to get user's email as username
+  private initializeUsername(): void {
     try {
       const token = this.authService.getToken();
       if (token) {
-        const decoded = this.authService.decodeToken(token);
+        // Get username from JWT token
+        const decoded = this.decodeToken(token);
         this.username = decoded.sub || 'Anonymous';
       } else {
         this.username = 'Anonymous';
@@ -43,12 +51,49 @@ export class ChatService {
       console.error('Error getting username:', error);
       this.username = 'Anonymous';
     }
+  }
 
-    this.stompClient.connect({}, () => {
+  private decodeToken(token: string): any {
+    try {
+      // Simple JWT token decoding
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      console.error('Error decoding token:', e);
+      return { sub: 'Anonymous' };
+    }
+  }
+
+  connect(): void {
+    if (this.client) {
+      this.disconnect();
+    }
+
+    // Create a new STOMP client
+    this.client = new Client({
+      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+      debug: (msg) => {
+        console.log('STOMP: ' + msg);
+      },
+      reconnectDelay: 5000,
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000
+    });
+
+    // Set up connection event handlers
+    this.client.onConnect = (frame) => {
+      console.log('Connected to WebSocket:', frame);
       this.connectedSubject.next(true);
 
-      // Subscribe to public topic
-      this.stompClient.subscribe('/topic/public', (message: any) => {
+      // Subscribe to the public channel
+      this.client?.subscribe('/topic/public', (message: IMessage) => {
         const newMessage: ChatMessage = JSON.parse(message.body);
         const currentMessages = this.messagesSubject.getValue();
         this.messagesSubject.next([...currentMessages, newMessage]);
@@ -56,70 +101,132 @@ export class ChatService {
 
       // Send join message
       this.sendJoinMessage();
-    }, (error: any) => {
-      console.error('Connection error:', error);
+    };
+
+    this.client.onDisconnect = () => {
+      console.log('Disconnected from WebSocket');
       this.connectedSubject.next(false);
-    });
+    };
+
+    this.client.onStompError = (frame) => {
+      console.error('STOMP Error:', frame);
+      this.connectedSubject.next(false);
+    };
+
+    // Activate the client (establish the connection)
+    try {
+      this.client.activate();
+    } catch (error) {
+      console.error('Error activating STOMP client:', error);
+    }
   }
 
   disconnect(): void {
-    if (this.stompClient && this.stompClient.connected) {
-      this.sendLeaveMessage();
+    if (this.client) {
+      if (this.client.connected) {
+        // Send leave message before disconnecting
+        this.sendLeaveMessage();
+      }
 
-      this.stompClient.disconnect(() => {
+      try {
+        this.client.deactivate();
         this.connectedSubject.next(false);
-      });
+      } catch (error) {
+        console.error('Error disconnecting:', error);
+      }
     }
   }
 
   sendMessage(content: string): void {
-    if (this.stompClient && this.connectedSubject.getValue()) {
-      const chatMessage: ChatMessage = {
-        sender: this.username,
-        content: content,
-        type: 'CHAT'
-      };
-
-      this.stompClient.send(
-        '/app/chat.sendMessage',
-        {},
-        JSON.stringify(chatMessage)
-      );
-    } else {
+    if (!this.client || !this.client.connected) {
       console.warn('Not connected to WebSocket');
+      return;
+    }
+
+    if (!content.trim()) {
+      console.warn('Cannot send empty message');
+      return;
+    }
+
+    const chatMessage: ChatMessage = {
+      sender: this.username,
+      content: content,
+      type: 'CHAT',
+      timestamp: new Date().toISOString()
+    };
+
+    try {
+      this.client.publish({
+        destination: '/app/chat.sendMessage',
+        body: JSON.stringify(chatMessage)
+      });
+    } catch (error) {
+      console.error('Error sending message:', error);
     }
   }
 
   private sendJoinMessage(): void {
+    if (!this.client || !this.client.connected) {
+      return;
+    }
+
     const joinMessage: ChatMessage = {
       sender: this.username,
       content: 'has joined the chat!',
-      type: 'JOIN'
+      type: 'JOIN',
+      timestamp: new Date().toISOString()
     };
 
-    this.stompClient.send(
-      '/app/chat.addUser',
-      {},
-      JSON.stringify(joinMessage)
-    );
+    try {
+      this.client.publish({
+        destination: '/app/chat.addUser',
+        body: JSON.stringify(joinMessage)
+      });
+    } catch (error) {
+      console.error('Error sending join message:', error);
+    }
   }
 
   private sendLeaveMessage(): void {
+    if (!this.client || !this.client.connected) {
+      return;
+    }
+
     const leaveMessage: ChatMessage = {
       sender: this.username,
       content: 'has left the chat!',
-      type: 'LEAVE'
+      type: 'LEAVE',
+      timestamp: new Date().toISOString()
     };
 
-    this.stompClient.send(
-      '/app/chat.sendMessage',
-      {},
-      JSON.stringify(leaveMessage)
-    );
+    try {
+      this.client.publish({
+        destination: '/app/chat.sendMessage',
+        body: JSON.stringify(leaveMessage)
+      });
+    } catch (error) {
+      console.error('Error sending leave message:', error);
+    }
   }
 
   getUsername(): string {
     return this.username;
+  }
+
+  // Clear message history (e.g., when switching chat rooms)
+  clearMessages(): void {
+    this.messagesSubject.next([]);
+  }
+
+  // Check if currently connected
+  isConnected(): boolean {
+    return this.client?.connected || false;
+  }
+
+  // For testing purposes
+  addTestMessage(message: ChatMessage): void {
+    const currentMessages = this.messagesSubject.getValue();
+    this.messagesSubject.next([...currentMessages, message]);
   }
 
 }
