@@ -124,6 +124,7 @@ public class DiaryController {
         // Preserve the userId and date from the existing entry
         entry.setId(id);
         entry.setUserId(existing.getUserId());
+
         // If workout was performed but no workout is attached, preserve existing workout or create placeholder
         if (entry.isWorkoutPerformed() && entry.getWorkoutSession() == null) {
             if (existing.getWorkoutSession() != null) {

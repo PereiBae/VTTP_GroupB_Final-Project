@@ -1,7 +1,9 @@
 package vttp.batch5.paf.finalproject.server.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDate;
 
@@ -21,6 +23,8 @@ public class DiaryEntry {
     private String spotifyArtistName;
 
     // Reference to workout if performed
+    @JsonProperty("workout")  // Map JSON property "workout" to Java property "workoutSession"
+    @Field("workout")         // Map Java property "workoutSession" to MongoDB field "workout"
     private WorkoutSession workoutSession;
 
     // Getters and Setters
