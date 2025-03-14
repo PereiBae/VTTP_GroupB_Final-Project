@@ -1,7 +1,7 @@
-import {inject, Injectable} from '@angular/core';
+import {Injectable} from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import SockJS from 'sockjs-client';
-import {Client, IFrame, IMessage} from '@stomp/stompjs';
+import {Client} from '@stomp/stompjs';
 import { AuthService } from './auth.service';
 
 export interface ChatMessage {
@@ -36,40 +36,26 @@ export class ChatService {
   private wsUrl = 'http://localhost:8080/ws';
 
   constructor(private authService: AuthService) {
-    this,this.initializeUsername()
+    this.initializeUsername();
   }
 
   private initializeUsername(): void {
     try {
       const token = this.authService.getToken();
       if (token) {
-        // Get username from JWT token
-        const decoded = this.decodeToken(token);
-        this.username = decoded.sub || 'Anonymous';
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          this.username = payload.sub || 'Anonymous';
+        } else {
+          this.username = 'Anonymous';
+        }
       } else {
         this.username = 'Anonymous';
       }
     } catch (error) {
       console.error('Error getting username:', error);
       this.username = 'Anonymous';
-    }
-  }
-
-  private decodeToken(token: string): any {
-    try {
-      // Simple JWT token decoding
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-      return JSON.parse(jsonPayload);
-    } catch (e) {
-      console.error('Error decoding token:', e);
-      return { sub: 'Anonymous' };
     }
   }
 
@@ -81,43 +67,31 @@ export class ChatService {
     console.log('Connecting to WebSocket at:', this.wsUrl);
 
     try {
-      // Create a new STOMP client with better error handling
+      // Create SockJS instance
+      const socket = new SockJS(this.wsUrl);
+
+      // Create STOMP client
       this.client = new Client({
-        webSocketFactory: () => {
-          const socket = new SockJS(this.wsUrl);
-
-          // Add error event listener to SockJS
-          socket.onerror = (e) => {
-            console.error('SockJS Error:', e);
-          };
-
-          return socket;
-        },
-        connectHeaders: {
-          // Add any needed headers for authentication
-          'Authorization': `Bearer ${this.authService.getToken() || ''}`
-        },
-        debug: (msg) => {
-          console.log('STOMP: ' + msg);
-        },
+        webSocketFactory: () => socket,
+        debug: (msg) => console.log('STOMP: ' + msg),
         reconnectDelay: 5000,
         heartbeatIncoming: 4000,
         heartbeatOutgoing: 4000
       });
 
-      // Set up connection event handlers
-      this.client.onConnect = (frame: IFrame) => {
-        console.log('Connected to WebSocket:', frame);
+      // Handle connection
+      this.client.onConnect = () => {
+        console.log('Connected to WebSocket');
         this.connectedSubject.next(true);
 
-        // Subscribe to the public channel
-        this.client?.subscribe('/topic/public', (message: IMessage) => {
+        // Subscribe to public channel
+        this.client?.subscribe('/topic/public', (message) => {
           try {
             const newMessage: ChatMessage = JSON.parse(message.body);
             const currentMessages = this.messagesSubject.getValue();
             this.messagesSubject.next([...currentMessages, newMessage]);
           } catch (e) {
-            console.error('Error parsing message:', e, message.body);
+            console.error('Error parsing message:', e);
           }
         });
 
@@ -125,11 +99,7 @@ export class ChatService {
         this.sendJoinMessage();
       };
 
-      this.client.onDisconnect = () => {
-        console.log('Disconnected from WebSocket');
-        this.connectedSubject.next(false);
-      };
-
+      // Handle errors and disconnection
       this.client.onStompError = (frame) => {
         console.error('STOMP Error:', frame);
         this.connectedSubject.next(false);
@@ -139,25 +109,30 @@ export class ChatService {
         console.error('WebSocket Error:', event);
       };
 
-      // Activate the client (establish the connection)
+      this.client.onDisconnect = () => {
+        console.log('Disconnected from WebSocket');
+        this.connectedSubject.next(false);
+      };
+
+      // Activate the connection
       this.client.activate();
     } catch (error) {
-      console.error('Error creating STOMP client:', error);
+      console.error('Error connecting to WebSocket:', error);
     }
   }
 
   disconnect(): void {
     if (this.client) {
       if (this.client.connected) {
-        // Send leave message before disconnecting
         this.sendLeaveMessage();
       }
 
       try {
         this.client.deactivate();
-        this.connectedSubject.next(false);
       } catch (error) {
         console.error('Error disconnecting:', error);
+      } finally {
+        this.connectedSubject.next(false);
       }
     }
   }
@@ -191,9 +166,7 @@ export class ChatService {
   }
 
   private sendJoinMessage(): void {
-    if (!this.client || !this.client.connected) {
-      return;
-    }
+    if (!this.client || !this.client.connected) return;
 
     const joinMessage: ChatMessage = {
       sender: this.username,
@@ -213,9 +186,7 @@ export class ChatService {
   }
 
   private sendLeaveMessage(): void {
-    if (!this.client || !this.client.connected) {
-      return;
-    }
+    if (!this.client || !this.client.connected) return;
 
     const leaveMessage: ChatMessage = {
       sender: this.username,
@@ -238,20 +209,8 @@ export class ChatService {
     return this.username;
   }
 
-  // Clear message history (e.g., when switching chat rooms)
-  clearMessages(): void {
-    this.messagesSubject.next([]);
-  }
-
-  // Check if currently connected
   isConnected(): boolean {
     return this.client?.connected || false;
-  }
-
-  // For testing purposes
-  addTestMessage(message: ChatMessage): void {
-    const currentMessages = this.messagesSubject.getValue();
-    this.messagesSubject.next([...currentMessages, message]);
   }
 
 }

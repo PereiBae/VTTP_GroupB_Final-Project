@@ -12,10 +12,10 @@
   nextTick: function(cb: Function) { setTimeout(cb, 0); }
 };
 
-// Buffer polyfill
-// This may be needed for some libraries that expect the Node.js Buffer
+// Buffer polyfill - safer version that doesn't use require()
 try {
-  (window as any).Buffer = (window as any).Buffer || require('buffer').Buffer;
+  // Don't use require - this is loaded via Angular's bundling system instead
+  (window as any).Buffer = (window as any).Buffer || [];
 } catch (e) {
-  console.warn('Buffer polyfill failed to load', e);
+  console.warn('Buffer polyfill error:', e);
 }
