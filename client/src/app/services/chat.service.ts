@@ -1,7 +1,7 @@
 import {inject, Injectable} from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import SockJS from 'sockjs-client';
-import { Client, IMessage } from '@stomp/stompjs';
+import {Client, IFrame, IMessage} from '@stomp/stompjs';
 import { AuthService } from './auth.service';
 
 export interface ChatMessage {
@@ -80,52 +80,69 @@ export class ChatService {
 
     console.log('Connecting to WebSocket at:', this.wsUrl);
 
-    // Create a new STOMP client
-    this.client = new Client({
-      webSocketFactory: () => new SockJS(this.wsUrl),
-      debug: (msg) => {
-        console.log('STOMP: ' + msg);
-      },
-      reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000
-    });
+    try {
+      // Create a new STOMP client with better error handling
+      this.client = new Client({
+        webSocketFactory: () => {
+          const socket = new SockJS(this.wsUrl);
 
-    // Set up connection event handlers
-    this.client.onConnect = (frame) => {
-      console.log('Connected to WebSocket:', frame);
-      this.connectedSubject.next(true);
+          // Add error event listener to SockJS
+          socket.onerror = (e) => {
+            console.error('SockJS Error:', e);
+          };
 
-      // Subscribe to the public channel
-      this.client?.subscribe('/topic/public', (message: IMessage) => {
-        try {
-          const newMessage: ChatMessage = JSON.parse(message.body);
-          const currentMessages = this.messagesSubject.getValue();
-          this.messagesSubject.next([...currentMessages, newMessage]);
-        } catch (e) {
-          console.error('Error parsing message:', e, message.body);
-        }
+          return socket;
+        },
+        connectHeaders: {
+          // Add any needed headers for authentication
+          'Authorization': `Bearer ${this.authService.getToken() || ''}`
+        },
+        debug: (msg) => {
+          console.log('STOMP: ' + msg);
+        },
+        reconnectDelay: 5000,
+        heartbeatIncoming: 4000,
+        heartbeatOutgoing: 4000
       });
 
-      // Send join message
-      this.sendJoinMessage();
-    };
+      // Set up connection event handlers
+      this.client.onConnect = (frame: IFrame) => {
+        console.log('Connected to WebSocket:', frame);
+        this.connectedSubject.next(true);
 
-    this.client.onDisconnect = () => {
-      console.log('Disconnected from WebSocket');
-      this.connectedSubject.next(false);
-    };
+        // Subscribe to the public channel
+        this.client?.subscribe('/topic/public', (message: IMessage) => {
+          try {
+            const newMessage: ChatMessage = JSON.parse(message.body);
+            const currentMessages = this.messagesSubject.getValue();
+            this.messagesSubject.next([...currentMessages, newMessage]);
+          } catch (e) {
+            console.error('Error parsing message:', e, message.body);
+          }
+        });
 
-    this.client.onStompError = (frame) => {
-      console.error('STOMP Error:', frame);
-      this.connectedSubject.next(false);
-    };
+        // Send join message
+        this.sendJoinMessage();
+      };
 
-    // Activate the client (establish the connection)
-    try {
+      this.client.onDisconnect = () => {
+        console.log('Disconnected from WebSocket');
+        this.connectedSubject.next(false);
+      };
+
+      this.client.onStompError = (frame) => {
+        console.error('STOMP Error:', frame);
+        this.connectedSubject.next(false);
+      };
+
+      this.client.onWebSocketError = (event) => {
+        console.error('WebSocket Error:', event);
+      };
+
+      // Activate the client (establish the connection)
       this.client.activate();
     } catch (error) {
-      console.error('Error activating STOMP client:', error);
+      console.error('Error creating STOMP client:', error);
     }
   }
 

@@ -8,6 +8,15 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script>
+    // Polyfill for Node.js globals in browser environment
+    window.global = window;
+    window.process = {
+      env: { DEBUG: undefined },
+      nextTick: function(cb) { setTimeout(cb, 0); }
+    };
+    window.Buffer = window.Buffer || require('buffer').Buffer;
+  </script>
 </head>
 <body>
   <app-root></app-root>
