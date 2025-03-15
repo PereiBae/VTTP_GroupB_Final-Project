@@ -1,10 +1,8 @@
 import {Component, inject, OnInit} from '@angular/core';
 import {TemplateService} from '../../../services/template.service';
-import {WorkoutService} from '../../../services/workout.service';
 import {ActivatedRoute, Router} from '@angular/router';
 import {WorkoutTemplate} from '../../../models/workout-template';
 import {MatSnackBar} from '@angular/material/snack-bar';
-import {WorkoutSession} from '../../../models/workout-session';
 import {DiaryService} from '../../../services/diary.service';
 import {DiaryEntry} from '../../../models/diary-entry';
 
@@ -45,37 +43,78 @@ export class TemplateListComponent implements OnInit{
   }
 
   startWorkoutFromTemplate(template: WorkoutTemplate): void {
-    // Create a new diary entry with workout for today
     const today = new Date().toISOString().split('T')[0];
-    const newEntry: DiaryEntry = {
-      date: today,
-      feeling: 'good', // Default feeling
-      notes: `Workout from template: ${template.name}`,
-      workoutPerformed: true,
-      workout: {
-        name: template.name,
-        startTime: new Date().toISOString(),
-        templateId: template.id,
-        exercises: template.exercises?.map(te => ({
-          exerciseId: te.exerciseId,
-          name: te.exerciseName,
-          muscleGroup: '',
-          sets: Array(te.sets).fill(0).map((_, i) => ({
-            setNumber: i + 1,
-            weight: te.weight,
-            reps: te.reps,
-            completed: false
-          }))
-        })) || []
-      }
-    };
 
-    this.diaryService.createDiaryEntry(newEntry).subscribe({
-      next: entry => {
-        this.router.navigate(['/diary', entry.id]);
+    // First check if there's already a diary entry for today
+    this.diaryService.getDiaryEntryByDate(today).subscribe({
+      next: (existingEntry) => {
+        // If an entry exists, update it instead of creating a new one
+        if (existingEntry) {
+          // Update the existing entry to include the workout
+          existingEntry.workoutPerformed = true;
+          existingEntry.workout = {
+            name: template.name,
+            startTime: new Date().toISOString(),
+            templateId: template.id,
+            exercises: template.exercises?.map(te => ({
+              exerciseId: te.exerciseId,
+              name: te.exerciseName,
+              muscleGroup: '',
+              sets: Array(te.sets).fill(0).map((_, i) => ({
+                setNumber: i + 1,
+                weight: te.weight,
+                reps: te.reps,
+                completed: false
+              }))
+            })) || []
+          };
+
+          // Update the existing entry
+          this.diaryService.updateDiaryEntry(existingEntry.id!, existingEntry).subscribe({
+            next: () => {
+              this.router.navigate(['/diary', existingEntry.id]);
+            },
+            error: (error) => {
+              console.error('Error updating diary entry with workout', error);
+            }
+          });
+        } else {
+          // No entry exists for today, create a new one
+          const newEntry: DiaryEntry = {
+            date: today,
+            feeling: 'good',
+            notes: `Workout from template: ${template.name}`,
+            workoutPerformed: true,
+            workout: {
+              name: template.name,
+              startTime: new Date().toISOString(),
+              templateId: template.id,
+              exercises: template.exercises?.map(te => ({
+                exerciseId: te.exerciseId,
+                name: te.exerciseName,
+                muscleGroup: '',
+                sets: Array(te.sets).fill(0).map((_, i) => ({
+                  setNumber: i + 1,
+                  weight: te.weight,
+                  reps: te.reps,
+                  completed: false
+                }))
+              })) || []
+            }
+          };
+
+          this.diaryService.createDiaryEntry(newEntry).subscribe({
+            next: (entry) => {
+              this.router.navigate(['/diary', entry.id]);
+            },
+            error: (error) => {
+              console.error('Error creating diary entry with workout', error);
+            }
+          });
+        }
       },
-      error: error => {
-        console.error('Error creating diary entry with workout', error);
+      error: (error) => {
+        console.error('Error checking for existing diary entry', error);
       }
     });
   }

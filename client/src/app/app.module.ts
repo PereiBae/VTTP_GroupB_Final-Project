@@ -14,7 +14,6 @@ import {DashboardComponent} from './components/dashboard/dashboard.component';
 import {AuthGuard} from './guards/auth.guard';
 import {AlreadyLoggedInGuard} from './guards/already-logged-in.guard';
 import {PremiumGuard} from './guards/premium.guard';
-import {PremiumFeatureComponent} from './components/premium-feature/premium-feature.component';
 import {UpgradeComponent} from './components/upgrade/upgrade.component';
 import {DiaryEntryComponent} from './components/diary/diary-entry/diary-entry.component';
 import {DiaryListComponent} from './components/diary/diary-list/diary-list.component';
@@ -28,6 +27,7 @@ import {StatisticComponent} from './components/statistics/statistic/statistic.co
 import {SpotifyCallBackComponent} from './components/spotify-call-back/spotify-call-back.component';
 import {PaymentSuccessComponent} from './components/payments/payment-success/payment-success.component';
 import {ChatComponent} from './components/chat/chat/chat.component';
+import {PrimeNgModule} from './primeng.module';
 
 const appRoutes: Routes = [
   { path: '', component: LoginComponent, canActivate: [AlreadyLoggedInGuard]},
@@ -73,7 +73,6 @@ const appRoutes: Routes = [
     LoginComponent,
     RegistrationComponent,
     DashboardComponent,
-    PremiumFeatureComponent,
     UpgradeComponent,
     DiaryEntryComponent,
     DiaryListComponent,
@@ -95,7 +94,8 @@ const appRoutes: Routes = [
     RouterModule.forRoot(appRoutes),
     MaterialModule,
     BrowserAnimationsModule,
-    FormsModule
+    FormsModule,
+    PrimeNgModule
   ],
   providers: [provideHttpClient(),],
   bootstrap: [AppComponent]

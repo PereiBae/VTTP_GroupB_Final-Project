@@ -1,1 +1,186 @@
-<p>statistic works!</p>
+<div class="statistics-container">
+  <div class="header">
+    <h1>Advanced Statistics</h1>
+    <p class="premium-badge">
+      <mat-icon>stars</mat-icon> Premium Feature
+    </p>
+  </div>
+
+  <!-- Time period filter -->
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <div class="filter-section">
+        <h2>Time Range</h2>
+        <mat-form-field appearance="fill">
+          <mat-label>Date Range</mat-label>
+          <mat-date-range-input [rangePicker]="picker">
+            <input matStartDate placeholder="Start date" [(ngModel)]="startDate">
+            <input matEndDate placeholder="End date" [(ngModel)]="endDate">
+          </mat-date-range-input>
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-date-range-picker #picker></mat-date-range-picker>
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" (click)="loadStatistics()">
+          <mat-icon>refresh</mat-icon>
+          Update Statistics
+        </button>
+      </div>
+
+      <div class="quick-filters">
+        <button mat-stroked-button (click)="setDateRange('week')">Last Week</button>
+        <button mat-stroked-button (click)="setDateRange('month')">Last Month</button>
+        <button mat-stroked-button (click)="setDateRange('quarter')">Last 3 Months</button>
+        <button mat-stroked-button (click)="setDateRange('year')">Last Year</button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading state -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading your statistics...</p>
+  </div>
+
+  <!-- No data state -->
+  <div *ngIf="!loading && !hasData" class="no-data">
+    <mat-icon>insert_chart</mat-icon>
+    <h3>No workout data available</h3>
+    <p>Start logging your workouts to see advanced statistics here</p>
+    <button mat-raised-button color="primary" routerLink="/diary/new">
+      Create Workout Entry
+    </button>
+  </div>
+
+  <!-- Stats overview -->
+  <div *ngIf="!loading && hasData" class="stats-grid">
+    <mat-card class="stat-card bg-gradient-info">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>fitness_center</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{totalWorkouts}}</div>
+          <div class="stat-label">Total Workouts</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card bg-gradient-success">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>timer</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{avgWorkoutDuration}} min</div>
+          <div class="stat-label">Avg. Duration</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card bg-gradient-warning">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{workoutFrequency}}/week</div>
+          <div class="stat-label">Workout Frequency</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card bg-gradient-primary">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>mood</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{mostCommonMood}}</div>
+          <div class="stat-label">Most Common Mood</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Charts section -->
+  <div *ngIf="!loading && hasData" class="charts-grid">
+    <!-- Workout Frequency Chart -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Workout Frequency</mat-card-title>
+        <div class="header-right">
+          <button mat-icon-button [matMenuTriggerFor]="frequencyMenu">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #frequencyMenu="matMenu">
+            <button mat-menu-item (click)="setFrequencyType('daily')">Daily</button>
+            <button mat-menu-item (click)="setFrequencyType('weekly')">Weekly</button>
+            <button mat-menu-item (click)="setFrequencyType('monthly')">Monthly</button>
+          </mat-menu>
+        </div>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="chart-container">
+          <p-chart type="line" [data]="workoutFrequencyData" [options]="chartOptions"></p-chart>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Exercise Distribution Chart -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Exercise Distribution</mat-card-title>
+        <div class="header-right">
+          <button mat-button [matMenuTriggerFor]="distributionMenu">
+            By {{distributionType}}
+            <mat-icon>arrow_drop_down</mat-icon>
+          </button>
+          <mat-menu #distributionMenu="matMenu">
+            <button mat-menu-item (click)="setDistributionType('muscle')">Muscle Group</button>
+            <button mat-menu-item (click)="setDistributionType('exercise')">Exercise Type</button>
+          </mat-menu>
+        </div>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="chart-container">
+          <p-chart type="pie" [data]="exerciseDistributionData" [options]="pieChartOptions"></p-chart>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Progress Tracker Chart -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Progress Tracker</mat-card-title>
+        <div class="header-right">
+          <mat-form-field appearance="fill">
+            <mat-label>Select Exercise</mat-label>
+            <mat-select [(ngModel)]="selectedExercise" (selectionChange)="updateProgressChart()">
+              <mat-option *ngFor="let exercise of topExercises" [value]="exercise">
+                {{exercise}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="chart-container">
+          <p-chart type="line" [data]="progressData" [options]="progressChartOptions"></p-chart>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Mood Correlation Chart -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Mood & Workout Correlation</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="chart-container">
+          <p-chart type="bar" [data]="moodCorrelationData" [options]="barChartOptions"></p-chart>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
