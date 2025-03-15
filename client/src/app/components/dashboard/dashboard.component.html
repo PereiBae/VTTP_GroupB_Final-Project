@@ -20,9 +20,11 @@
         </mat-card-content>
         <mat-card-footer>
           <hr>
-          <div class="stats">
-            <mat-icon>flag</mat-icon> <a href="/diary">Tracking mood & progress</a>
-          </div>
+          <a routerLink="/diary" class="stats-link">
+            <div class="stats">
+              <mat-icon>flag</mat-icon> Tracking mood & workouts
+            </div>
+          </a>
         </mat-card-footer>
       </mat-card>
     </div>
@@ -46,10 +48,11 @@
         </mat-card-content>
         <mat-card-footer>
           <hr>
-          <div class="stats">
-            <mat-icon>add</mat-icon>
-            <a routerLink="/templates/new">Create new template</a>
-          </div>
+          <a routerLink="/templates" class="stats-link">
+            <div class="stats">
+              <mat-icon>visibility</mat-icon> View all templates
+            </div>
+          </a>
         </mat-card-footer>
       </mat-card>
     </div>
@@ -73,11 +76,13 @@
         </mat-card-content>
         <mat-card-footer>
           <hr>
-          <div class="stats">
-            <mat-icon>{{ isPremium ? 'check_circle' : 'info' }}</mat-icon>
-            <span *ngIf="isPremium">All features unlocked</span>
-            <a *ngIf="!isPremium" routerLink="/upgrade">Upgrade for more features</a>
-          </div>
+          <a routerLink="{{ isPremium ? '/profile' : '/upgrade' }}" class="stats-link">
+            <div class="stats">
+              <mat-icon>{{ isPremium ? 'check_circle' : 'info' }}</mat-icon>
+              <span *ngIf="isPremium">All features unlocked</span>
+              <span *ngIf="!isPremium">Upgrade for more features</span>
+            </div>
+          </a>
         </mat-card-footer>
       </mat-card>
     </div>
