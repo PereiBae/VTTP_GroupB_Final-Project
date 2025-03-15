@@ -42,7 +42,7 @@
               }
             ],
             "styles": [
-              "src/custom-theme.scss",
+              "src/black-dashboard-theme.scss",
               "src/styles.css"
             ],
             "scripts": []

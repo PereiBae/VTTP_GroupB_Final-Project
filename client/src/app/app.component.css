@@ -1,24 +1,117 @@
+/* Main layout styling */
+.spacer {
+  flex: 1 1 auto;
+}
+
+/* Black Dashboard inspired sidenav styles */
+.app-sidenav {
+  width: 260px;
+  background: linear-gradient(to bottom, #1e1e2f, #1e1e24);
+  box-shadow: 0 0 45px 0 rgba(0, 0, 0, 0.6);
+}
+
+.sidenav-header {
+  height: 130px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.logo-img {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 10px;
+}
+
+.logo-img img {
+  width: 100%;
+}
+
+.logo .simple-text {
+  color: #fff;
+  text-decoration: none;
+  text-align: center;
+}
+
+.logo .logo-mini {
+  font-size: 1.2rem;
+  font-weight: 300;
+  line-height: 30px;
+}
+
+.logo .logo-normal {
+  font-size: 1.4rem;
+  font-weight: 400;
+}
+
+/* Styling for the Material list items */
+.mat-nav-list {
+  padding-top: 15px;
+}
+
+.mat-nav-list .mat-list-item {
+  color: rgba(255, 255, 255, 0.7);
+  height: 48px;
+  margin: 8px 15px;
+  border-radius: 4px;
+  font-weight: 300;
+  transition: all 0.2s ease;
+}
+
+.mat-nav-list .mat-list-item.active {
+  background: #5e72e4 !important;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  color: #fff;
+}
+
+.mat-nav-list .mat-list-item:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.mat-nav-list .mat-list-item .mat-icon {
+  color: rgba(255, 255, 255, 0.7);
+  margin-right: 15px;
+}
+
+.mat-nav-list .mat-list-item.active .mat-icon {
+  color: #fff;
+}
+
+/* Premium section styling */
 .premium-menu-section {
-  margin-top: 16px;
+  margin-top: 25px;
+  padding-top: 15px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 8px;
 }
 
 .premium-header {
   padding: 8px 16px;
-  font-size: 14px;
-  color: #ffd700;
+  font-size: 12px;
+  color: #e14eca;
   display: flex;
   align-items: center;
 }
 
 .premium-icon {
+  color: #e14eca;
   margin-right: 8px;
-  color: #ffd700;
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
 }
 
 .premium-locked {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.5) !important;
   position: relative;
 }
 
@@ -29,54 +122,83 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
-/* Add to your global styles */
-.premium-notification {
-  background: #3f51b5;
-  color: white;
+/* Material toolbar styling */
+mat-toolbar {
+  background: linear-gradient(195deg, #42424a, #191919);
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, .14), 0 7px 10px -5px rgba(64, 64, 64, .4);
+  height: 70px;
+  position: relative;
+  z-index: 10;
 }
 
-.spacer {
-  flex: 1 1 auto;
+mat-toolbar span {
+  font-weight: 300;
+  font-size: 1.3rem;
 }
 
-/* Fix the sidenav container to take up full height regardless of content */
+.avatar-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.avatar-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Content area styling */
+.content {
+  padding: 30px 15px;
+  min-height: calc(100vh - 70px);
+}
+
+.content-wrapper {
+  padding-bottom: 30px;
+}
+
+/* Menu styling */
+.app-menu {
+  background: #27293d;
+  border-radius: 6px;
+  box-shadow: 0 5px 25px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Fix the sidenav container to take up full height */
 mat-sidenav-container {
   position: absolute;
-  top: 64px; /* Height of your toolbar */
+  top: 70px;
   bottom: 0;
   left: 0;
   right: 0;
+  background: #1e1e2f;
+}
+
+/* Main panel */
+.main-panel {
+  background: #1e1e2f radial-gradient(#3a3a63 0.5px, #1e1e2f 0.5px);
+  background-size: 10px 10px;
 }
 
 /* For mobile screens with smaller toolbar */
 @media (max-width: 599px) {
-  mat-sidenav-container {
-    top: 56px; /* Height of toolbar on mobile */
+  mat-toolbar {
+    height: 56px;
   }
-}
 
-mat-sidenav {
-  width: 250px;
-}
+  mat-sidenav-container {
+    top: 56px;
+  }
 
-/* Make the sidenav scrollable if content exceeds height */
-mat-sidenav .mat-drawer-inner-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow-y: auto;
-}
+  .sidenav-header {
+    height: 100px;
+  }
 
-mat-nav-list {
-  flex: 1;
-}
-
-mat-nav-list a mat-icon {
-  margin-right: 16px;
-}
-
-/* Make the main content area scrollable */
-mat-sidenav-content {
-  height: 100%;
-  overflow-y: auto;
+  .logo .logo-normal {
+    font-size: 1.2rem;
+  }
 }

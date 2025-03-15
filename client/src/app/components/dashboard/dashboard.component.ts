@@ -5,6 +5,8 @@ import {DiaryService} from '../../services/diary.service';
 import {TemplateService} from '../../services/template.service';
 import {AuthService} from '../../services/auth.service';
 import {Router} from '@angular/router';
+import {WorkoutSession} from '../../models/workout-session';
+import {WorkoutService} from '../../services/workout.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -17,12 +19,14 @@ export class DashboardComponent implements OnInit{
   // Combined diary entries (which now include workouts)
   recentEntries: DiaryEntry[] = [];
   workoutTemplates: WorkoutTemplate[] = [];
+  recentWorkoutCount: number = 0;
   isPremium = false;
   loading = false;
 
 
   private diaryService = inject(DiaryService)
   private templateService = inject(TemplateService)
+  private workoutService = inject(WorkoutService)
   private authService = inject(AuthService)
   private router = inject(Router)
 
@@ -113,4 +117,5 @@ export class DashboardComponent implements OnInit{
       }
     });
   }
+
 }
