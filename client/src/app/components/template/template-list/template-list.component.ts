@@ -5,6 +5,8 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {WorkoutTemplate} from '../../../models/workout-template';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {WorkoutSession} from '../../../models/workout-session';
+import {DiaryService} from '../../../services/diary.service';
+import {DiaryEntry} from '../../../models/diary-entry';
 
 @Component({
   selector: 'app-template-list',
@@ -18,7 +20,7 @@ export class TemplateListComponent implements OnInit{
   loading = false;
 
   private templateService = inject(TemplateService)
-  private workoutService = inject(WorkoutService)
+  private diaryService = inject(DiaryService)
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private snackBar = inject(MatSnackBar);
@@ -43,42 +45,37 @@ export class TemplateListComponent implements OnInit{
   }
 
   startWorkoutFromTemplate(template: WorkoutTemplate): void {
-    // First, get the full template with exercises
-    this.templateService.getTemplateWithExercises(template.id!).subscribe({
-      next: (fullTemplate) => {
-        // Create a new workout from the template
-        const workout: WorkoutSession = {
-          name: template.name,
-          startTime: new Date().toISOString(),
-          templateId: template.id,
-          exercises: fullTemplate.exercises?.map(te => ({
-            exerciseId: te.exerciseId,
-            name: te.exerciseName,
-            muscleGroup: '',
-            sets: Array(te.sets).fill(0).map((_, i) => ({
-              setNumber: i + 1,
-              weight: te.weight,
-              reps: te.reps,
-              completed: false
-            }))
-          })) || []
-        };
+    // Create a new diary entry with workout for today
+    const today = new Date().toISOString().split('T')[0];
+    const newEntry: DiaryEntry = {
+      date: today,
+      feeling: 'good', // Default feeling
+      notes: `Workout from template: ${template.name}`,
+      workoutPerformed: true,
+      workout: {
+        name: template.name,
+        startTime: new Date().toISOString(),
+        templateId: template.id,
+        exercises: template.exercises?.map(te => ({
+          exerciseId: te.exerciseId,
+          name: te.exerciseName,
+          muscleGroup: '',
+          sets: Array(te.sets).fill(0).map((_, i) => ({
+            setNumber: i + 1,
+            weight: te.weight,
+            reps: te.reps,
+            completed: false
+          }))
+        })) || []
+      }
+    };
 
-        // Create the workout
-        this.workoutService.createWorkoutSession(workout).subscribe({
-          next: (createdWorkout) => {
-            this.snackBar.open('Workout started', 'Close', { duration: 3000 });
-            this.router.navigate(['/workouts', createdWorkout.id]);
-          },
-          error: (error) => {
-            console.error('Error starting workout', error);
-            this.snackBar.open('Error starting workout', 'Close', { duration: 3000 });
-          }
-        });
+    this.diaryService.createDiaryEntry(newEntry).subscribe({
+      next: entry => {
+        this.router.navigate(['/diary', entry.id]);
       },
-      error: (error) => {
-        console.error('Error loading template details', error);
-        this.snackBar.open('Error loading template details', 'Close', { duration: 3000 });
+      error: error => {
+        console.error('Error creating diary entry with workout', error);
       }
     });
   }

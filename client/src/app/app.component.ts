@@ -18,6 +18,10 @@ export class AppComponent implements OnInit{
 
   ngOnInit() {
     this.updateLoginStatus()
+    // Subscribe to auth state changes
+    this.authService.authStateChanged$.subscribe(() => {
+      this.updateLoginStatus();
+    });
   }
 
   updateLoginStatus() {

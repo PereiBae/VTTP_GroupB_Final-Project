@@ -145,6 +145,18 @@ mat-toolbar span {
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  padding: 0; /* Remove padding */
+  line-height: 1; /* Reset line height */
+}
+
+.avatar-button .mat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0; /* Remove any margins */
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
 }
 
 .avatar-button:hover {

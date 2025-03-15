@@ -2,6 +2,7 @@ import {Component, inject, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 import {LoginService} from '../../services/login.service';
+import {AuthService} from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -15,6 +16,7 @@ export class LoginComponent implements OnInit {
   private fb = inject(FormBuilder)
   private router = inject(Router)
   private loginSvc = inject(LoginService)
+  private authService = inject(AuthService)
 
   ngOnInit() {
     this.createForm();
@@ -35,7 +37,7 @@ export class LoginComponent implements OnInit {
         console.log('Login response:', response);
         console.log('Token received:', response.token);
         // Save token (for example, in localStorage)
-        localStorage.setItem('jwt', response.token);
+        this.authService.setToken(response.token);
         console.log('Token stored in localStorage:', localStorage.getItem('jwt'));
         // Navigate to a protected page after login
         this.router.navigate(['/dashboard']);

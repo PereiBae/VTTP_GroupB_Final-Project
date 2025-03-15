@@ -24,8 +24,6 @@ import {NutritionListComponent} from './components/nutrition/nutrition-list/nutr
 import {ProfileFormComponent} from './components/profile/profile-form/profile-form.component';
 import {TemplateFormComponent} from './components/template/template-form/template-form.component';
 import {TemplateListComponent} from './components/template/template-list/template-list.component';
-import {WorkoutListComponent} from './components/workout/workout-list/workout-list.component';
-import {WorkoutSessionComponent} from './components/workout/workout-session/workout-session.component';
 import {StatisticComponent} from './components/statistics/statistic/statistic.component';
 import {SpotifyCallBackComponent} from './components/spotify-call-back/spotify-call-back.component';
 import {PaymentSuccessComponent} from './components/payments/payment-success/payment-success.component';
@@ -41,11 +39,6 @@ const appRoutes: Routes = [
   { path: 'diary/new', component: DiaryEntryComponent, canActivate: [AuthGuard] },
   { path: 'diary/:id', component: DiaryEntryComponent, canActivate: [AuthGuard] },
   { path: 'callback', component:SpotifyCallBackComponent},
-
-  // Workout routes
-  { path: 'workouts', component: WorkoutListComponent, canActivate: [AuthGuard] },
-  { path: 'workouts/new', component: WorkoutSessionComponent, canActivate: [AuthGuard] },
-  { path: 'workouts/:id', component: WorkoutSessionComponent, canActivate: [AuthGuard] },
 
   // Template routes
   { path: 'templates', component: TemplateListComponent, canActivate: [AuthGuard] },
@@ -90,8 +83,6 @@ const appRoutes: Routes = [
     ProfileFormComponent,
     TemplateFormComponent,
     TemplateListComponent,
-    WorkoutListComponent,
-    WorkoutSessionComponent,
     StatisticComponent,
     SpotifyCallBackComponent,
     PaymentSuccessComponent,
