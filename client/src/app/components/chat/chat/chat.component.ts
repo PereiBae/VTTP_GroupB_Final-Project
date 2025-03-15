@@ -1,4 +1,4 @@
-import {Component, inject, OnDestroy, OnInit} from '@angular/core';
+import {Component, ElementRef, inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {ChatMessage, ChatService} from '../../../services/chat.service';
 import {FormControl, Validators} from '@angular/forms';
 import {Subscription} from 'rxjs';
@@ -10,6 +10,7 @@ import {Subscription} from 'rxjs';
   styleUrl: './chat.component.css'
 })
 export class ChatComponent implements OnInit, OnDestroy {
+  @ViewChild('chatMessages') private messagesContainer!: ElementRef;
 
   messages: ChatMessage[] = [];
   messageInput = new FormControl('', [Validators.required]);
@@ -79,9 +80,11 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   private scrollToBottom(): void {
-    const chatContainer = document.querySelector('.chat-messages');
-    if (chatContainer) {
-      chatContainer.scrollTop = chatContainer.scrollHeight;
+    try {
+      const element = this.messagesContainer.nativeElement;
+      element.scrollTop = element.scrollHeight;
+    } catch (err) {
+      console.error('Error scrolling to bottom', err);
     }
   }
 

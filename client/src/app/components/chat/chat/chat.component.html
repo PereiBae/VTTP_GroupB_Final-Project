@@ -7,7 +7,7 @@
     </div>
   </div>
 
-  <div class="chat-messages">
+  <div class="chat-messages" #chatMessages>
     <div *ngFor="let message of messages" class="message" [ngClass]="getMessageClass(message)">
       <div *ngIf="message.type === 'CHAT'" class="message-content">
         <div class="sender">{{ message.sender }}</div>
@@ -27,11 +27,13 @@
 
   <div class="chat-input">
     <form (ngSubmit)="sendMessage()">
-      <mat-form-field appearance="outline" class="message-field">
-        <input matInput [formControl]="messageInput" placeholder="Type a message...">
+      <mat-form-field appearance="outline" class="message-field" floatLabel="always">
+        <mat-label>Type a message</mat-label>
+        <input matInput [formControl]="messageInput" placeholder="Type a message..."
+               class="light-text-input">
       </mat-form-field>
 
-      <button mat-raised-button color="primary" type="submit"
+      <button mat-raised-button color="primary" type="submit" class="send-button"
               [disabled]="messageInput.invalid || !isConnected">
         <mat-icon>send</mat-icon>
       </button>
