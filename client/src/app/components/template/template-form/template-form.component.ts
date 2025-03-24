@@ -37,6 +37,20 @@ export class TemplateFormComponent implements OnInit{
 
     if (this.isEdit && this.templateId) {
       this.loadTemplate(this.templateId);
+    }else {
+      // Check if there's a new exercise from the exercise search
+      const newExerciseJson = sessionStorage.getItem('newTemplateExercise');
+      if (newExerciseJson) {
+        try {
+          const newExercise = JSON.parse(newExerciseJson);
+          // Add the exercise to the form
+          this.addExercise(newExercise);
+          // Clear from session storage to avoid duplicate additions
+          sessionStorage.removeItem('newTemplateExercise');
+        } catch (e) {
+          console.error('Error parsing new exercise data', e);
+        }
+      }
     }
   }
 

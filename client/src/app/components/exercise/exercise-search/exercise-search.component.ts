@@ -5,6 +5,10 @@ import {ExerciseAPIService} from '../../../services/exercise-api.service';
 import {Router} from '@angular/router';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatChipListboxChange} from '@angular/material/chips';
+import {ExerciseDetailsDialogComponent} from '../exercise-details-dialog/exercise-details-dialog.component';
+import {TemplateSelectionDialogComponent} from '../template-selection-dialog/template-selection-dialog.component';
+import {TemplateExercise} from '../../../models/template-exercise';
+import {TemplateService} from '../../../services/template.service';
 
 @Component({
   selector: 'app-exercise-search',
@@ -26,6 +30,7 @@ export class ExerciseSearchComponent implements OnInit {
   private router = inject(Router);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private templateService = inject(TemplateService)
 
   ngOnInit(): void {
     this.loadInitialExercises();
@@ -92,19 +97,71 @@ export class ExerciseSearchComponent implements OnInit {
   }
 
   viewExerciseDetails(exercise: Exercise): void {
-    // For now, just show a snackbar with exercise details
-    // In future could open a dialog with more details and possibly a gif
-    this.snackBar.open(`${exercise.name}`, 'Close', { duration: 3000 });
+    const dialogRef = this.dialog.open(ExerciseDetailsDialogComponent, {
+      width: '600px',
+      data: { exercise }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // If result exists, user clicked "Add to Template" in the details view
+        this.addToTemplate(result);
+      }
+    });
   }
 
   addToTemplate(exercise: Exercise): void {
-    // Navigate to create template page with exercise data
-    // For simplicity, we'll just show a snackbar now
-    this.snackBar.open(`Exercise "${exercise.name}" would be added to a template`, 'Close', { duration: 3000 });
+    const dialogRef = this.dialog.open(TemplateSelectionDialogComponent, {
+      width: '500px',
+      data: { exercise }
+    });
 
-    // Future implementation would:
-    // 1. Either navigate to template creation page with exercise pre-filled
-    // 2. Or open a dialog to select an existing template to add the exercise to
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result) return;
+
+      if (result.action === 'add-to-existing') {
+        // Add to existing template
+        this.addExerciseToExistingTemplate(result.templateId, result.exercise);
+      } else if (result.action === 'create-new') {
+        // Navigate to create template page with exercise data
+        this.navigateToCreateTemplate(result.exercise);
+      }
+    });
+  }
+
+  private addExerciseToExistingTemplate(templateId: number, exerciseData: TemplateExercise): void {
+    this.templateService.getTemplateWithExercises(templateId).subscribe({
+      next: (template) => {
+        // Add the new exercise to the template's exercises
+        const exercises = [...(template.exercises || []), exerciseData];
+
+        // Update the template with the new exercise
+        this.templateService.updateTemplate(templateId, template, exercises).subscribe({
+          next: () => {
+            this.snackBar.open(`Exercise added to "${template.name}" template`, 'View', {
+              duration: 5000
+            }).onAction().subscribe(() => {
+              this.router.navigate(['/templates', templateId]);
+            });
+          },
+          error: (error) => {
+            console.error('Error updating template', error);
+            this.snackBar.open('Error adding exercise to template', 'Close', { duration: 3000 });
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error getting template details', error);
+        this.snackBar.open('Error retrieving template details', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  private navigateToCreateTemplate(exerciseData: TemplateExercise): void {
+    // Store exercise data in sessionStorage for the template form to use
+    sessionStorage.setItem('newTemplateExercise', JSON.stringify(exerciseData));
+    // Navigate to template creation page
+    this.router.navigate(['/templates/new']);
   }
 
   displayPaginatedResults(exercises: Exercise[]): void {

@@ -1,0 +1,31 @@
+.detail-section, .muscles-section, .instructions-section {
+  margin-bottom: 20px;
+}
+
+.detail-row {
+  margin-bottom: 8px;
+  display: flex;
+}
+
+.detail-label {
+  color: #1d8cf8;
+  font-weight: 500;
+  min-width: 100px;
+  display: inline-block;
+}
+
+.muscles-section h3, .instructions-section h3 {
+  color: #ffffff;
+  font-weight: 400;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+}
+
+ol {
+  padding-left: 20px;
+}
+
+li {
+  margin-bottom: 8px;
+}

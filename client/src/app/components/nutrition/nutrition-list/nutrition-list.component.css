@@ -1,0 +1,181 @@
+.nutrition-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.filter-card {
+  margin-bottom: 20px;
+}
+
+.filter-card mat-card-content {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.date-range {
+  flex: 1;
+  min-width: 240px;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0;
+}
+
+.no-logs {
+  text-align: center;
+  margin: 40px 0;
+  padding: 40px;
+  color: #aaa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-logs mat-icon {
+  font-size: 48px;
+  height: 48px;
+  width: 48px;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.no-logs p {
+  margin-bottom: 24px;
+  font-size: 18px;
+}
+
+.nutrition-logs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.nutrition-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.nutrition-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.nutrition-card mat-card-header {
+  padding-bottom: 8px;
+}
+
+.nutrition-card mat-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.macro-bars {
+  margin: 16px 0;
+}
+
+.macro-bar {
+  margin-bottom: 12px;
+}
+
+.macro-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.macro-title {
+  font-weight: 500;
+}
+
+.macro-value {
+  color: #aaa;
+}
+
+.macro-percentage {
+  text-align: right;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #aaa;
+}
+
+.meals-summary {
+  margin-top: auto;
+  display: flex;
+  gap: 16px;
+  padding-top: 16px;
+}
+
+.meal-count, .food-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #aaa;
+}
+
+.meal-count mat-icon, .food-count mat-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+}
+
+/* Style progress bars for dark theme */
+::ng-deep .mat-mdc-progress-bar {
+  height: 8px !important;
+  border-radius: 4px;
+}
+
+::ng-deep .mat-mdc-progress-bar .mdc-linear-progress__bar-inner {
+  border-top-width: 8px !important;
+}
+
+/* Color tweaks for dark theme */
+.nutrition-card {
+  background-color: #27293d;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.macro-title {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.macro-value, .macro-percentage, .meal-count, .food-count {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .nutrition-logs {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .header h1 {
+    text-align: center;
+  }
+
+  .header button {
+    width: 100%;
+  }
+}

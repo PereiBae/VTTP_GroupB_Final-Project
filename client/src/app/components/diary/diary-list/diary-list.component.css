@@ -69,11 +69,9 @@
   margin-right: 8px;
 }
 
-/* Add these styles to diary-list.component.css */
-
-/* First, reset the Angular Material default styles that might be causing conflicts */
+/* Reset the Angular Material default styles */
 mat-card-actions {
-  display: block !important; /* Change from flex to block */
+  display: block !important;
   padding: 8px 16px !important;
   margin: 0 !important;
 }
@@ -93,16 +91,26 @@ mat-card-actions {
   flex-shrink: 0;
 }
 
-/* Style the workout preview */
+/* Style the workout preview with improved contrast */
 .workout-preview {
   display: flex;
   align-items: center;
-  padding: 4px 8px;
-  background-color: #e3f2fd;
-  border-radius: 4px;
+  padding: 6px 10px;
+  background-color: #10b6d3; /* Brighter blue background */
+  color: white; /* White text for better contrast */
+  border-radius: 6px;
   margin-left: 16px;
   max-width: 65%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-weight: 500; /* Slightly bolder text */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+}
+
+.workout-preview mat-icon {
+  margin-right: 6px;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
 }

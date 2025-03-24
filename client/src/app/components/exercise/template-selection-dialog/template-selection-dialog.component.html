@@ -1,0 +1,68 @@
+<h2 mat-dialog-title>Add Exercise to Template</h2>
+<div *ngIf="loading" class="loading-container">
+  <mat-spinner></mat-spinner>
+</div>
+
+<mat-dialog-content class="mat-typography" *ngIf="!loading">
+  <div class="exercise-card">
+    <h3>{{ data.exercise.name }}</h3>
+    <p *ngIf="data.exercise.primaryMuscles && data.exercise.primaryMuscles.length">
+      <span class="label">Muscles:</span> {{ data.exercise.primaryMuscles.join(', ') }}
+    </p>
+  </div>
+
+  <form [formGroup]="form">
+    <div class="form-section">
+      <mat-radio-group formControlName="templateOption" class="template-option-group">
+        <mat-radio-button value="existing">Add to existing template</mat-radio-button>
+        <mat-radio-button value="new">Create new template</mat-radio-button>
+      </mat-radio-group>
+    </div>
+
+    <div *ngIf="form.get('templateOption')?.value === 'existing'">
+      <div class="no-templates" *ngIf="templates.length === 0">
+        <p>You don't have any templates yet.</p>
+        <button mat-raised-button color="primary" (click)="createNewTemplate()">
+          Create Your First Template
+        </button>
+      </div>
+
+      <mat-form-field appearance="fill" *ngIf="templates.length > 0" class="full-width">
+        <mat-label>Select Template</mat-label>
+        <mat-select formControlName="templateId">
+          <mat-option *ngFor="let template of templates" [value]="template.id">
+            {{ template.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="exercise-settings">
+      <h3>Exercise Settings</h3>
+
+      <div class="settings-row">
+        <mat-form-field appearance="fill">
+          <mat-label>Sets</mat-label>
+          <input matInput type="number" formControlName="sets" min="1" max="10">
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Reps</mat-label>
+          <input matInput type="number" formControlName="reps" min="1" max="100">
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Weight (kg)</mat-label>
+          <input matInput type="number" formControlName="weight" min="0" step="2.5">
+        </mat-form-field>
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Cancel</button>
+  <button mat-raised-button color="primary" [disabled]="!isFormValid()" (click)="addToTemplate()">
+    Add Exercise
+  </button>
+</mat-dialog-actions>

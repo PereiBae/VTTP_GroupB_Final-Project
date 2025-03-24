@@ -1,1 +1,114 @@
-<p>nutrition-list works!</p>
+<div class="nutrition-container">
+  <div class="header">
+    <h1>Nutrition Tracking</h1>
+    <button mat-raised-button color="primary" routerLink="/nutrition/new">
+      <mat-icon>add</mat-icon>
+      New Nutrition Log
+    </button>
+  </div>
+
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <mat-form-field appearance="fill" class="date-range">
+        <mat-label>Date range</mat-label>
+        <mat-date-range-input [rangePicker]="picker">
+          <input matStartDate placeholder="Start date" [(ngModel)]="startDate">
+          <input matEndDate placeholder="End date" [(ngModel)]="endDate">
+        </mat-date-range-input>
+        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-date-range-picker #picker></mat-date-range-picker>
+      </mat-form-field>
+
+      <button mat-raised-button color="accent" (click)="loadNutritionLogs()">
+        Filter
+      </button>
+    </mat-card-content>
+  </mat-card>
+
+  <div *ngIf="loading" class="loading-spinner">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading && nutritionLogs.length === 0" class="no-logs">
+    <mat-icon>restaurant</mat-icon>
+    <p>No nutrition logs found for the selected period.</p>
+    <button mat-raised-button color="primary" routerLink="/nutrition/new">Create Your First Log</button>
+  </div>
+
+  <div *ngIf="!loading && nutritionLogs.length > 0" class="nutrition-logs">
+    <mat-card *ngFor="let log of nutritionLogs" class="nutrition-card">
+      <mat-card-header>
+        <mat-card-title>{{ log.date | date:'fullDate' }}</mat-card-title>
+        <mat-card-subtitle>
+          {{ log.totalCalories }} calories
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="macro-bars">
+          <div class="macro-bar">
+            <div class="macro-label">
+              <div class="macro-title">Protein</div>
+              <div class="macro-value">{{ formatDecimal(log.totalProtein) }}g</div>
+            </div>
+            <mat-progress-bar mode="determinate"
+                              [value]="calculatePercentage(log.totalProtein * 4, log.totalCalories)"
+                              color="primary">
+            </mat-progress-bar>
+            <div class="macro-percentage">
+              {{ calculatePercentage(log.totalProtein * 4, log.totalCalories) }}%
+            </div>
+          </div>
+
+          <div class="macro-bar">
+            <div class="macro-label">
+              <div class="macro-title">Carbs</div>
+              <div class="macro-value">{{ formatDecimal(log.totalCarbs) }}g</div>
+            </div>
+            <mat-progress-bar mode="determinate"
+                              [value]="calculatePercentage(log.totalCarbs * 4, log.totalCalories)"
+                              color="accent">
+            </mat-progress-bar>
+            <div class="macro-percentage">
+              {{ calculatePercentage(log.totalCarbs * 4, log.totalCalories) }}%
+            </div>
+          </div>
+
+          <div class="macro-bar">
+            <div class="macro-label">
+              <div class="macro-title">Fat</div>
+              <div class="macro-value">{{ formatDecimal(log.totalFat) }}g</div>
+            </div>
+            <mat-progress-bar mode="determinate"
+                              [value]="calculatePercentage(log.totalFat * 9, log.totalCalories)"
+                              color="warn">
+            </mat-progress-bar>
+            <div class="macro-percentage">
+              {{ calculatePercentage(log.totalFat * 9, log.totalCalories) }}%
+            </div>
+          </div>
+        </div>
+
+        <div class="meals-summary">
+          <div class="meal-count">
+            <mat-icon>restaurant_menu</mat-icon>
+            <span>{{ log.meals.length }} meals</span>
+          </div>
+          <div class="food-count">
+            <mat-icon>fastfood</mat-icon>
+            <span>{{ getTotalFoodItems(log) }} food items</span>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <button mat-button [routerLink]="['/nutrition', log.id]">
+          EDIT
+        </button>
+        <button mat-button color="warn" (click)="deleteLog(log)">
+          DELETE
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

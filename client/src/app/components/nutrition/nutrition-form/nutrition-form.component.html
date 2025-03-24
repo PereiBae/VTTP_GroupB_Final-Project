@@ -1,1 +1,205 @@
-<p>nutrition-form works!</p>
+<div class="nutrition-container">
+  <div class="header">
+    <h1>{{ isEdit ? 'Edit Nutrition Log' : 'New Nutrition Log' }}</h1>
+    <button mat-icon-button routerLink="/nutrition">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="loading-spinner">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <form [formGroup]="nutritionForm" (ngSubmit)="saveNutrition()" *ngIf="!loading">
+    <mat-card>
+      <mat-card-content>
+        <!-- Date Section -->
+        <div class="section-header">
+          <h2>Nutrition Log</h2>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="fill">
+            <mat-label>Date</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="date" required>
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+            <mat-error *ngIf="nutritionForm.get('date')?.hasError('required')">
+              Date is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <!-- Meals Section -->
+        <div class="section-header">
+          <h2>Meals</h2>
+          <button mat-raised-button color="primary" type="button" (click)="addMeal()">
+            <mat-icon>add</mat-icon> Add Meal
+          </button>
+        </div>
+
+        <div *ngIf="meals.length === 0" class="no-meals">
+          <p>No meals added yet. Add your first meal to start tracking nutrition.</p>
+        </div>
+
+        <div formArrayName="meals">
+          <mat-accordion *ngIf="meals.length > 0">
+            <mat-expansion-panel *ngFor="let meal of meals.controls; let i = index" [formGroupName]="i">
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  {{ meal.get('name')?.value || 'New Meal' }}
+                </mat-panel-title>
+                <mat-panel-description>
+                  {{ meal.get('calories')?.value || 0 }} calories
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+
+              <div class="meal-form">
+                <div class="meal-header">
+                  <mat-form-field appearance="fill">
+                    <mat-label>Meal Name</mat-label>
+                    <input matInput formControlName="name" required placeholder="E.g., Breakfast, Lunch, Dinner">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="fill">
+                    <mat-label>Time</mat-label>
+                    <input matInput type="time" formControlName="time">
+                  </mat-form-field>
+
+                  <button mat-icon-button color="warn" type="button" (click)="removeMeal(i)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+
+                <div class="meal-nutrients">
+                  <div class="nutrient-item">
+                    <span class="nutrient-label">Calories:</span>
+                    <span class="nutrient-value">{{ meal.get('calories')?.value || 0 }}</span>
+                  </div>
+                  <div class="nutrient-item">
+                    <span class="nutrient-label">Protein:</span>
+                    <span class="nutrient-value">{{ meal.get('protein')?.value || 0 }}g</span>
+                  </div>
+                  <div class="nutrient-item">
+                    <span class="nutrient-label">Carbs:</span>
+                    <span class="nutrient-value">{{ meal.get('carbs')?.value || 0 }}g</span>
+                  </div>
+                  <div class="nutrient-item">
+                    <span class="nutrient-label">Fat:</span>
+                    <span class="nutrient-value">{{ meal.get('fat')?.value || 0 }}g</span>
+                  </div>
+                </div>
+
+                <!-- Food Items Section -->
+                <div class="food-items-section">
+                  <h3>Food Items</h3>
+
+                  <div *ngIf="getFoodItems(i).length === 0" class="no-foods">
+                    <p>No food items added to this meal yet.</p>
+                  </div>
+
+                  <div formArrayName="foodItems">
+                    <mat-card *ngFor="let food of getFoodItems(i).controls; let j = index" [formGroupName]="j" class="food-item-card">
+                      <div class="food-item-form">
+                        <mat-form-field appearance="outline">
+                          <mat-label>Food Name</mat-label>
+                          <input matInput formControlName="name" required>
+                        </mat-form-field>
+
+                        <div class="food-amount">
+                          <mat-form-field appearance="outline">
+                            <mat-label>Amount</mat-label>
+                            <input matInput type="number" formControlName="servingSize" min="0">
+                          </mat-form-field>
+
+                          <mat-form-field appearance="outline">
+                            <mat-label>Unit</mat-label>
+                            <mat-select formControlName="servingUnit">
+                              <mat-option value="g">grams</mat-option>
+                              <mat-option value="ml">milliliters</mat-option>
+                              <mat-option value="oz">ounces</mat-option>
+                              <mat-option value="cup">cups</mat-option>
+                              <mat-option value="tbsp">tablespoons</mat-option>
+                              <mat-option value="tsp">teaspoons</mat-option>
+                              <mat-option value="serving">servings</mat-option>
+                            </mat-select>
+                          </mat-form-field>
+                        </div>
+
+                        <div class="food-nutrients">
+                          <mat-form-field appearance="outline">
+                            <mat-label>Calories</mat-label>
+                            <input matInput type="number" formControlName="calories" min="0" [readonly]="true">
+                            <mat-hint>Auto-calculated from macros</mat-hint>
+                          </mat-form-field>
+
+                          <mat-form-field appearance="outline">
+                            <mat-label>Protein (g)</mat-label>
+                            <input matInput type="number" formControlName="protein" min="0" (change)="updateTotals()">
+                          </mat-form-field>
+
+                          <mat-form-field appearance="outline">
+                            <mat-label>Carbs (g)</mat-label>
+                            <input matInput type="number" formControlName="carbs" min="0" (change)="updateTotals()">
+                          </mat-form-field>
+
+                          <mat-form-field appearance="outline">
+                            <mat-label>Fat (g)</mat-label>
+                            <input matInput type="number" formControlName="fat" min="0" (change)="updateTotals()">
+                          </mat-form-field>
+                        </div>
+
+                        <button mat-icon-button color="warn" (click)="removeFoodItem(i, j)" class="remove-food-btn">
+                          <mat-icon>close</mat-icon>
+                        </button>
+                      </div>
+                    </mat-card>
+                  </div>
+
+                  <button mat-stroked-button color="primary" type="button" (click)="addFoodItem(i)" class="add-food-btn">
+                    <mat-icon>add</mat-icon> Add Food Item
+                  </button>
+                </div>
+              </div>
+            </mat-expansion-panel>
+          </mat-accordion>
+        </div>
+
+        <!-- Daily Totals Section -->
+        <div class="section-header">
+          <h2>Daily Totals</h2>
+        </div>
+
+        <div class="daily-totals">
+          <div class="totals-card">
+            <div class="total-item">
+              <span class="total-label">Total Calories:</span>
+              <span class="total-value">{{ nutritionForm.get('totalCalories')?.value || 0 }}</span>
+            </div>
+            <div class="total-item">
+              <span class="total-label">Total Protein:</span>
+              <span class="total-value">{{ nutritionForm.get('totalProtein')?.value || 0 }}g</span>
+            </div>
+            <div class="total-item">
+              <span class="total-label">Total Carbs:</span>
+              <span class="total-value">{{ nutritionForm.get('totalCarbs')?.value || 0 }}g</span>
+            </div>
+            <div class="total-item">
+              <span class="total-label">Total Fat:</span>
+              <span class="total-value">{{ nutritionForm.get('totalFat')?.value || 0 }}g</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <button mat-button type="button" routerLink="/nutrition">
+          CANCEL
+        </button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="nutritionForm.invalid || saving">
+          {{ isEdit ? 'UPDATE' : 'SAVE' }}
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </form>
+</div>

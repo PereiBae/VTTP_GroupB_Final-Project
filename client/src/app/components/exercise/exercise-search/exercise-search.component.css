@@ -65,16 +65,82 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.exercise-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.exercise-card mat-card-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
 }
 
 .exercise-card mat-card-content {
   flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.exercise-card:hover {
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-  transition: all 0.2s ease;
+/* Add color to property labels */
+.property-label {
+  color: #1d8cf8; /* Blue accent color */
+  font-weight: 500;
+  display: inline-block;
+  min-width: 120px;
+}
+
+/* Style for muscle groups */
+.muscle-group {
+  color: #00f2c3; /* Green for muscles */
+}
+
+/* Style for equipment */
+.equipment-label {
+  color: #ff8d72; /* Orange for equipment */
+}
+
+/* Style for level */
+.level-label {
+  color: #ffd600; /* Yellow for level */
+}
+
+/* Adding a bit of spacing to exercise info rows */
+.exercise-info-row {
+  margin-bottom: 6px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.exercise-info-row p {
+  margin: 0;
+}
+
+/* Style for card action buttons */
+.exercise-card mat-card-actions {
+  padding-top: 12px;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.exercise-card mat-card-actions button {
+  transition: background-color 0.2s;
+}
+
+.exercise-card mat-card-actions button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.view-details-btn {
+  color: #1d8cf8 !important; /* Blue for view */
+}
+
+.add-to-template-btn {
+  color: #00f2c3 !important; /* Green for add */
 }
 
 .pagination-controls{

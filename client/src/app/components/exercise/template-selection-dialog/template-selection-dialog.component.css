@@ -1,0 +1,68 @@
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.exercise-card {
+  background-color: rgba(29, 140, 248, 0.1);
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.exercise-card h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  color: #ffffff;
+}
+
+.exercise-card .label {
+  color: #1d8cf8;
+  font-weight: 500;
+}
+
+.template-option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.form-section {
+  margin-bottom: 20px;
+}
+
+.exercise-settings {
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.exercise-settings h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: #ffffff;
+  font-weight: 400;
+}
+
+.settings-row {
+  display: flex;
+  gap: 16px;
+}
+
+.settings-row mat-form-field {
+  flex: 1;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.no-templates {
+  text-align: center;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}

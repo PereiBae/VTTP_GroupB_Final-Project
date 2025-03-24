@@ -124,11 +124,31 @@ export class NutritionFormComponent implements OnInit{
 
       for (let j = 0; j < foodItems.length; j++) {
         const food = foodItems.at(j).value;
-        mealCalories += food.calories || 0;
-        mealProtein += food.protein || 0;
-        mealCarbs += food.carbs || 0;
-        mealFat += food.fat || 0;
+
+        // Get macro values, defaulting to 0 if undefined
+        const protein = food.protein || 0;
+        const carbs = food.carbs || 0;
+        const fat = food.fat || 0;
+
+        // Calculate calories from macros using standard conversion factors
+        // Protein: 4 cal/g, Carbs: 4 cal/g, Fat: 9 cal/g
+        const calculatedCalories = (protein * 4) + (carbs * 4) + (fat * 9);
+
+        // Update the calories value in the form
+        foodItems.at(j).get('calories')?.setValue(this.formatDecimal(calculatedCalories), { emitEvent: false });
+
+        // Add to meal totals, using formatted values to avoid precision issues
+        mealProtein += protein;
+        mealCarbs += carbs;
+        mealFat += fat;
+        mealCalories += calculatedCalories;
       }
+
+      // Format meal totals to fix decimal precision
+      mealProtein = this.formatDecimal(mealProtein);
+      mealCarbs = this.formatDecimal(mealCarbs);
+      mealFat = this.formatDecimal(mealFat);
+      mealCalories = this.formatDecimal(mealCalories);
 
       // Update meal totals
       meal.patchValue({
@@ -145,6 +165,12 @@ export class NutritionFormComponent implements OnInit{
       totalFat += mealFat;
     }
 
+    // Format day totals to fix decimal precision
+    totalProtein = this.formatDecimal(totalProtein);
+    totalCarbs = this.formatDecimal(totalCarbs);
+    totalFat = this.formatDecimal(totalFat);
+    totalCalories = this.formatDecimal(totalCalories);
+
     // Update form totals
     this.nutritionForm.patchValue({
       totalCalories: totalCalories,
@@ -152,6 +178,11 @@ export class NutritionFormComponent implements OnInit{
       totalCarbs: totalCarbs,
       totalFat: totalFat
     }, { emitEvent: false });
+  }
+
+  // Helper method to fix decimal precision issues
+  formatDecimal(value: number): number {
+    return parseFloat(value.toFixed(1));
   }
 
   loadNutritionData(id: string) {

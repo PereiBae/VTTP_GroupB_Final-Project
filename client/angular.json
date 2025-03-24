@@ -43,7 +43,6 @@
             ],
             "styles": [
               "src/black-dashboard-theme.scss",
-              "node_modules/primeng/resources/primeng.min.css",
               "src/styles.css"
             ],
             "scripts": []

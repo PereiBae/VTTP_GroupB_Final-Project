@@ -28,6 +28,12 @@ import {SpotifyCallBackComponent} from './components/spotify-call-back/spotify-c
 import {PaymentSuccessComponent} from './components/payments/payment-success/payment-success.component';
 import {ChatComponent} from './components/chat/chat/chat.component';
 import {PrimeNgModule} from './primeng.module';
+import {
+  ExerciseDetailsDialogComponent
+} from './components/exercise/exercise-details-dialog/exercise-details-dialog.component';
+import {
+  TemplateSelectionDialogComponent
+} from './components/exercise/template-selection-dialog/template-selection-dialog.component';
 
 const appRoutes: Routes = [
   { path: '', component: LoginComponent, canActivate: [AlreadyLoggedInGuard]},
@@ -85,7 +91,9 @@ const appRoutes: Routes = [
     StatisticComponent,
     SpotifyCallBackComponent,
     PaymentSuccessComponent,
-    ChatComponent
+    ChatComponent,
+    ExerciseDetailsDialogComponent,
+    TemplateSelectionDialogComponent
   ],
   imports: [
     BrowserModule,
