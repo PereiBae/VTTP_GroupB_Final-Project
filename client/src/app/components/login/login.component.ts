@@ -13,6 +13,9 @@ import {AuthService} from '../../services/auth.service';
 export class LoginComponent implements OnInit {
 
   protected form!: FormGroup;
+  loginError: string | null = null;
+  hidePassword = true;
+
   private fb = inject(FormBuilder)
   private router = inject(Router)
   private loginSvc = inject(LoginService)
@@ -44,6 +47,11 @@ export class LoginComponent implements OnInit {
       },
       error: (err) => {
         console.error('Login failed', err);
+        if (err.status === 401) {
+          this.loginError = 'Invalid email or password';
+        } else {
+          this.loginError = 'Login failed. Please try again later.';
+        }
       }
     });
   }

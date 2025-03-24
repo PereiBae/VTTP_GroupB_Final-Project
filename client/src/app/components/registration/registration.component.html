@@ -1,22 +1,67 @@
 <div class="registration-container">
   <mat-card>
+    <div class="logo-section">
+      <img src="/app-icon.png" alt="Gym Diary Logo">
+      <h1>Create Account</h1>
+    </div>
+
     <form [formGroup]="form" (ngSubmit)="register()">
       <mat-form-field appearance="fill">
         <mat-label>Email</mat-label>
         <input matInput type="email" formControlName="email">
+        <mat-error *ngIf="form.get('email')?.hasError('required')">
+          Email is required
+        </mat-error>
+        <mat-error *ngIf="form.get('email')?.hasError('email') && !form.get('email')?.hasError('required')">
+          Please enter a valid email address
+        </mat-error>
       </mat-form-field>
-      <mat-form-field appearance="fill">
+
+      <mat-form-field appearance="fill" class="password-field">
         <mat-label>Password</mat-label>
-        <input matInput type="password" formControlName="password">
+        <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password">
+        <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button">
+          <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+        </button>
+        <mat-error *ngIf="form.get('password')?.hasError('required')">
+          Password is required
+        </mat-error>
+        <mat-error *ngIf="form.get('password')?.hasError('minlength') && !form.get('password')?.hasError('required')">
+          Password must be at least 8 characters
+        </mat-error>
+        <mat-hint *ngIf="form.get('password')?.value">
+          <div class="password-strength">
+            <span>Password strength:</span>
+            <span class="strength-meter" [ngClass]="getPasswordStrengthClass(form.get('password')?.value)"></span>
+            <span class="strength-text">{{getPasswordStrengthText(form.get('password')?.value)}}</span>
+          </div>
+        </mat-hint>
       </mat-form-field>
+
       <mat-form-field appearance="fill">
         <mat-label>Confirm Password</mat-label>
-        <input matInput type="password" formControlName="confirmPassword">
+        <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmPassword">
+        <button mat-icon-button matSuffix (click)="hideConfirmPassword = !hideConfirmPassword" type="button">
+          <mat-icon>{{hideConfirmPassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+        </button>
+        <mat-error *ngIf="form.get('confirmPassword')?.hasError('required')">
+          Please confirm your password
+        </mat-error>
+        <mat-error *ngIf="form.hasError('passwordMismatch') && !form.get('confirmPassword')?.hasError('required')">
+          Passwords do not match
+        </mat-error>
       </mat-form-field>
-      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">
-        Register
-      </button>
+
+      <div *ngIf="registrationError" class="error-message">
+        {{registrationError}}
+      </div>
+
+      <div class="footer-actions">
+        <a routerLink="/" class="login-link">Already have an account?</a>
+        <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">
+          Register
+        </button>
+      </div>
     </form>
   </mat-card>
 </div>
-

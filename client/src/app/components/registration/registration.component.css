@@ -1,20 +1,129 @@
-/* registration.component.css */
+/* Updated registration.component.css */
 .registration-container {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f5f5f5; /* light background for contrast */
+  background-color: #1e1e2f; /* Match app dark background */
 }
 
 mat-card {
   padding: 24px;
   width: 400px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  background-color: #27293d; /* Match card background from theme */
+  border-radius: 12px;
 }
 
 form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 28px; /* Increased from 16px to allow more space for hints */
+}
+
+/* Add more space below the password field specifically */
+.password-field {
+  margin-bottom: 12px; /* Extra margin for the password field with strength meter */
+}
+
+
+.error-message {
+  color: #f44336;
+  margin-bottom: 16px;
+  font-size: 14px;
+  text-align: center;
+  background-color: rgba(244, 67, 54, 0.1);
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.password-strength {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.strength-meter {
+  height: 4px;
+  width: 60px;
+  border-radius: 2px;
+}
+
+.strength-meter.weak {
+  background-color: #f44336;
+  width: 20px;
+}
+
+.strength-meter.medium {
+  background-color: #ff9800;
+  width: 40px;
+}
+
+.strength-meter.strong {
+  background-color: #4caf50;
+  width: 60px;
+}
+
+.strength-meter.very-strong {
+  background-color: #2e7d32;
+  width: 60px;
+}
+
+.strength-text {
+  font-size: 12px;
+}
+
+.logo-section {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.logo-section img {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 16px;
+}
+
+.logo-section h1 {
+  font-size: 24px;
+  font-weight: 300;
+  color: #fff;
+  margin: 0;
+}
+
+.footer-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.login-link {
+  color: #1d8cf8;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+/* Fix any Material form field styling issues with dark theme */
+::ng-deep .mat-form-field-label {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+::ng-deep .mat-form-field-underline {
+  background-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+::ng-deep .mat-form-field-ripple {
+  background-color: #3f51b5 !important;
+}
+
+/* Make sure hint is fully visible */
+::ng-deep .mat-form-field-subscript-wrapper {
+  position: static !important; /* Override Angular Material's absolute positioning */
+  margin-top: 8px !important;
+}
+
+::ng-deep .mat-form-field.mat-focused .mat-form-field-label {
+  color: #3f51b5 !important;
 }

@@ -1,17 +1,82 @@
+/* Updated login.component.css */
 .login {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
+  background-color: #1e1e2f; /* Match app dark background */
 }
 
 mat-card {
   padding: 24px;
   width: 400px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  background-color: #27293d; /* Match card background from theme */
+  border-radius: 12px;
 }
 
 form {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  margin-bottom: 20px;
+}
+
+.error-message {
+  color: #f44336;
+  margin-bottom: 16px;
+  font-size: 14px;
+  text-align: center;
+  background-color: rgba(244, 67, 54, 0.1);
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.logo-section {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.logo-section img {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 16px;
+}
+
+.logo-section h1 {
+  font-size: 24px;
+  font-weight: 300;
+  color: #fff;
+  margin: 0;
+}
+
+.register-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.register-section p {
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 12px;
+}
+
+/* Fix Material form field styling for dark theme */
+::ng-deep .mat-form-field-label {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+::ng-deep .mat-form-field-underline {
+  background-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+::ng-deep .mat-form-field-ripple {
+  background-color: #3f51b5 !important;
+}
+
+::ng-deep .mat-form-field.mat-focused .mat-form-field-label {
+  color: #3f51b5 !important;
 }

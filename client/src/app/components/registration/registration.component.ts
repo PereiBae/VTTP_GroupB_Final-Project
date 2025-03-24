@@ -1,5 +1,5 @@
 import {Component, inject, OnInit} from '@angular/core';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {AbstractControl, FormBuilder, FormGroup, ValidationErrors, ValidatorFn, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 import {RegistrationService} from '../../services/registration.service';
 
@@ -16,14 +16,61 @@ export class RegistrationComponent implements OnInit{
   private registrationSvc = inject(RegistrationService)
 
   protected form!: FormGroup;
+  hidePassword = true;
+  hideConfirmPassword = true;
+  registrationError: string | null = null;
 
   ngOnInit() {
     this.form = this.fb.group({
       email: this.fb.control<string>('', [Validators.required, Validators.email]),
-      password: this.fb.control('', [Validators.required]),
+      password: this.fb.control('', [Validators.required, Validators.minLength(8)]),
       confirmPassword: this.fb.control<string>('', [Validators.required])
-    });
+    }, { validators: this.passwordMatchValidator() });
   }
+
+  // Custom validator to check if passwords match
+  passwordMatchValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const password = control.get('password');
+      const confirmPassword = control.get('confirmPassword');
+
+      if (password && confirmPassword && password.value !== confirmPassword.value) {
+        return { 'passwordMismatch': true };
+      }
+      return null;
+    };
+  }
+
+  // Get password strength class for visual indicator
+  getPasswordStrengthClass(password: string): string {
+    if (!password) return 'none';
+
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    const strength = [hasLowerCase, hasUpperCase, hasNumber, hasSpecialChar].filter(Boolean).length;
+
+    if (password.length < 8) return 'weak';
+    if (strength === 1) return 'weak';
+    if (strength === 2) return 'medium';
+    if (strength === 3) return 'strong';
+    return 'very-strong';
+  }
+
+  // Get password strength text description
+  getPasswordStrengthText(password: string): string {
+    const strengthClass = this.getPasswordStrengthClass(password);
+    switch (strengthClass) {
+      case 'weak': return 'Weak';
+      case 'medium': return 'Medium';
+      case 'strong': return 'Strong';
+      case 'very-strong': return 'Very Strong';
+      default: return '';
+    }
+  }
+
 
   register(): void {
     if (this.form.value.password !== this.form.value.confirmPassword) {
