@@ -50,21 +50,11 @@ public class SecurityConfig{
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
                         // Static resources - be explicit about exact files having issues
-                        .requestMatchers(
-                                "/polyfills-**.js",
-                                "/main-**.js",
-                                "/app-icon.png",
-                                "/manifest.json"
-                        ).permitAll()
-                        // General static resources
-                        .requestMatchers(
-                                "/",
-                                "/index.html",
-                                "/*.js",
-                                "/*.css",
-                                "/*.ico",
-                                "/icons/**.jpg"
-                        ).permitAll()
+                        .requestMatchers(  "/", "/index.html", "/favicon.ico",
+                                "/assets/**",
+                                "/styles*.css", "/main*.js", "/runtime*.js",
+                                "/polyfills*.js", "/scripts*.js","/icons/144x144.png","/manifest.json",
+                                "/**/*.png", "/**/*.jpg", "/**/*.jpeg").permitAll()
                         // Require authentication for all other API requests
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
