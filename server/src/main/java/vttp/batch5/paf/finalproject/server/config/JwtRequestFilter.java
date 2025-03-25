@@ -31,13 +31,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         // Skip JWT authentication for public endpoints
         String path = request.getRequestURI();
-        if (path.startsWith("/api/auth/") || path.equals("/") ||
-                path.endsWith(".js") || path.endsWith(".css") || path.endsWith(".ico") ||
-                path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".svg") ||
-                path.startsWith("/public/") || path.startsWith("/icons/") || // Updated for public folder
-                path.contains("polyfills-") || path.contains("main-") ||
-                path.contains("runtime-") || path.contains("vendor-") ||
-                path.equals("/manifest.json")) {
+        // Explicitly skip JWT checks for problem files
+        // Skip ALL static resources
+        if (path.endsWith(".js") || path.endsWith(".css") || path.endsWith(".html") ||
+                path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg") ||
+                path.endsWith(".ico") || path.endsWith(".svg") || path.endsWith(".json") ||
+                path.startsWith("/assets/") || path.startsWith("/icons/")) {
+
+            System.out.println("JwtRequestFilter: Skipping JWT check for: " + path);
             chain.doFilter(request, response);
             return;
         }

@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -14,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -34,7 +36,6 @@ public class SecurityConfig{
     public SecurityFilterChain webSocketSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .securityMatcher("/ws/**", "/topic/**", "/app/**")
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll());
 
@@ -45,15 +46,27 @@ public class SecurityConfig{
     @Order(2)
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        // Static resources must be explicitly permitted
+                        // Static resources - be explicit about exact files having issues
                         .requestMatchers(
-                                "/polyfills-FFHMD2TL.js", "/main-YAYMII3O.js", "/runtime-*.js",
-                                "/app-icon.png", "/manifest.json",
-                                "/", "/index.html", "/*.js", "/*.css", "/*.ico","/icons/*.png"
+                                "/polyfills-**.js",
+                                "/main-**.js",
+                                "/app-icon.png",
+                                "/manifest.json"
                         ).permitAll()
+                        // General static resources
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/*.js",
+                                "/*.css",
+                                "/*.ico",
+                                "/icons/**.jpg"
+                        ).permitAll()
+                        // Require authentication for all other API requests
+                        .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
@@ -67,7 +80,7 @@ public class SecurityConfig{
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:4200"));
+        configuration.setAllowedOrigins(Collections.singletonList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept"));
         configuration.setAllowCredentials(true);
