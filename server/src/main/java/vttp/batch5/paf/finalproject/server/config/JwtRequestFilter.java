@@ -33,7 +33,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         if (path.startsWith("/api/auth/") || path.equals("/") ||
                 path.endsWith(".js") || path.endsWith(".css") || path.endsWith(".ico") ||
-                path.startsWith("/assets/")) {
+                path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".svg") ||
+                path.startsWith("/public/") || path.startsWith("/icons/") || // Updated for public folder
+                path.contains("polyfills-") || path.contains("main-") ||
+                path.contains("runtime-") || path.contains("vendor-") ||
+                path.equals("/manifest.json")) {
             chain.doFilter(request, response);
             return;
         }

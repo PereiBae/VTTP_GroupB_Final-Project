@@ -48,7 +48,12 @@ public class SecurityConfig{
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/auth/login", "/api/auth/register","/", "/index.html", "/*.js", "/*.css", "/*.ico", "/assets/**").permitAll()
+                        // Static resources must be explicitly permitted
+                        .requestMatchers(
+                                "/polyfills-FFHMD2TL.js", "/main-YAYMII3O.js", "/runtime-*.js",
+                                "/app-icon.png", "/manifest.json",
+                                "/", "/index.html", "/*.js", "/*.css", "/*.ico","/icons/*.png"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
