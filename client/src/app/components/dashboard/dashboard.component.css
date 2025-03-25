@@ -10,6 +10,27 @@
 
 .col-lg-3, .col-md-6, .col-lg-4, .col-lg-8 {
   padding: 15px;
+  width: 100%;
+}
+
+/* Tablet breakpoint */
+@media (min-width: 768px) {
+  .col-md-6 {
+    width: 50%; /* Half width on tablets */
+  }
+}
+
+/* Desktop breakpoint */
+@media (min-width: 992px) {
+  .col-lg-3 {
+    width: 25%;
+  }
+  .col-lg-4 {
+    width: 33.33%;
+  }
+  .col-lg-8 {
+    width: 66.67%;
+  }
 }
 
 .col-lg-3 {

@@ -35,19 +35,40 @@
 
 .feeling-toggle {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* Prevent unwanted wrapping */
   margin-top: 8px;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden; /* Keep border radius clean */
 }
 
 .feeling-toggle .mat-button-toggle {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 8px 16px;
+  padding: 8px 10px; /* Slightly reduce padding */
+  flex: 1; /* Equal width for all buttons */
 }
 
 .feeling-toggle .mat-button-toggle-checked {
-  background-color: #f0f0f0;
+  background-color: rgba(29, 140, 248, 0.2); /* Semi-transparent blue background */
+  color: white !important; /* Keep text white */
+}
+
+.feeling-toggle .mat-button-toggle-checked mat-icon {
+  color: white !important; /* Keep icon white */
+}
+
+@media (max-width: 576px) {
+  .feeling-toggle {
+    flex-wrap: wrap; /* Allow wrapping on very small screens */
+  }
+
+  .feeling-toggle .mat-button-toggle {
+    flex-basis: 33.33%; /* 3 per row on small screens */
+    min-width: 80px;
+    margin-bottom: 8px;
+  }
 }
 
 .feeling-toggle mat-icon {

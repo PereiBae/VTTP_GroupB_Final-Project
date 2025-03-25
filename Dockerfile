@@ -20,7 +20,6 @@ RUN ng build
 # Build Java Spring-Boot
 
 FROM openjdk:23-jdk AS j-build
-ENV JAVA_TOOL_OPTIONS="-XX:UseSVE=0"
 
 WORKDIR /src
 
@@ -29,6 +28,9 @@ COPY server/src src
 COPY server/mvnw .
 COPY server/pom.xml .
 
+# Make the Maven wrapper executable
+RUN chmod +x ./mvnw
+
 # Copy angular files over to static
 COPY --from=ng-build /src/dist/client/browser/ src/main/resources/static
 
@@ -36,7 +38,6 @@ RUN ./mvnw package -Dmaven.test.skip=true
 
 # Combine the JAR file over to the final container
 FROM openjdk:23-jdk
-ENV JAVA_TOOL_OPTIONS="-XX:UseSVE=0"
 
 WORKDIR /app
 
@@ -48,19 +49,21 @@ ENV SPRING_DATA_MONGODB_DATABASE=finalProj
 
 ENV SPRING_DATASOURCE_USERNAME=root
 ENV SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/finalProj
-ENV SPRING_DATASOURECE_PASSWORD=password
+ENV SPRING_DATASOURCE_PASSWORD=password
 
 ENV EXERCISE_API_KEY=apikey
 ENV EXERCISE_API_URL=apiUrl
 
-ENV SPOTIFY_CLIENT_IDs=spotifyId
+ENV SPOTIFY_CLIENT_ID=spotifyId
 ENV SPOTIFY_CLIENT_SECRET=secretClient
 ENV SPOTIFY_REDIRECT_URI=redirectURL
 
 # Stripe API Configuration
 ENV STRIPE_API_KEY=apiKey
-ENV STRIP_WEBHOOK_SECRET=secretWebhook
+ENV STRIPE_WEBHOOK_SECRET=secretWebhook
 ENV APP_URL=appURL
+
+ENV JWT_SECRET_KEY=secret
 
 EXPOSE ${PORT}
 

@@ -12,4 +12,12 @@ public class AuthenticationResponse {
         return token;
     }
 
+    // Add toString() method for debugging
+    @Override
+    public String toString() {
+        return "AuthenticationResponse{" +
+                "token='" + token + '\'' +
+                '}';
+    }
+
 }

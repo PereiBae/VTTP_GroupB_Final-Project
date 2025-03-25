@@ -38,6 +38,18 @@ export class LoginComponent implements OnInit {
     this.loginSvc.login(e, p).subscribe({
       next: (response) => {
         console.log('Login response:', response);
+
+        if (!response) {
+          this.loginError = "Server returned empty response";
+          return;
+        }
+
+        if (!response.token) {
+          console.error('Token missing from response:', response);
+          this.loginError = "Authentication error: Invalid server response";
+          return;
+        }
+
         console.log('Token received:', response.token);
         // Save token (for example, in localStorage)
         this.authService.setToken(response.token);

@@ -20,6 +20,8 @@ import vttp.batch5.paf.finalproject.server.models.AuthenticationResponse;
 import vttp.batch5.paf.finalproject.server.models.RegistrationRequest;
 import vttp.batch5.paf.finalproject.server.services.MyUserDetailsService;
 
+import java.util.Map;
+
 @Controller
 @RequestMapping("/api")
 public class LoginController {
@@ -36,21 +38,38 @@ public class LoginController {
     @Autowired
     private MyUserDetailsService myUserDetailsService;
 
-    @PostMapping(path = "/auth/login", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(path = "/auth/login", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authRequest) throws Exception {
+    public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authRequest) {
+        System.out.println("is there anything here?" + authRequest.toString());
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword())
             );
+            System.out.println("In the Controller, verifying login for ...."+ authRequest.getEmail());
+
+            // Only generate token if authentication succeeds
+            final UserDetails userDetails = myUserDetailsService.loadUserByUsername(authRequest.getEmail());
+            final String jwt = jwtUtil.generateToken(userDetails);
+
+            System.out.println("Generated token: " + jwt);
+
+            // Return response with explicit content type
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(new AuthenticationResponse(jwt));
+
         } catch (BadCredentialsException e) {
-            throw new Exception("Incorrect email or password", e);
+            // Return 401 Unauthorized with error message
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Incorrect email or password"));
+        } catch (Exception e) {
+            // Log the exception for debugging
+            e.printStackTrace();
+            // Return 500 with error message
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "An error occurred during authentication"));
         }
-
-        final UserDetails userDetails = myUserDetailsService.loadUserByUsername(authRequest.getEmail());
-        final String jwt = jwtUtil.generateToken(userDetails);
-
-        return ResponseEntity.ok(new AuthenticationResponse(jwt));
     }
 
     @PostMapping(path = "/auth/register", consumes = MediaType.APPLICATION_JSON_VALUE)

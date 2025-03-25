@@ -196,6 +196,21 @@ mat-sidenav-container {
   background-size: 10px 10px;
 }
 
+@media (max-width: 768px) {
+  .app-sidenav {
+    width: 85%; /* Wider drawer on mobile */
+  }
+
+  .sidenav-header {
+    height: 110px;
+    padding: 10px;
+  }
+
+  .mat-nav-list .mat-list-item {
+    height: 56px; /* Larger touch targets */
+  }
+}
+
 /* For mobile screens with smaller toolbar */
 @media (max-width: 599px) {
   mat-toolbar {

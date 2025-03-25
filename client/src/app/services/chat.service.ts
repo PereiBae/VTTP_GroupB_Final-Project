@@ -33,7 +33,7 @@ export class ChatService implements OnDestroy{
 
   private username: string = '';
   // Configurable WebSocket URL - can be set from environment
-  private wsUrl = 'http://localhost:8080/ws';
+  private wsUrl = 'earnest-charisma-production.up.railway.app/ws';
   private authSubscription: Subscription;
 
   constructor(private authService: AuthService) {
