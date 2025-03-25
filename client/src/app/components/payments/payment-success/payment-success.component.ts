@@ -15,6 +15,8 @@ export class PaymentSuccessComponent implements OnInit{
   loading = true;
   success = false;
   errorMessage = '';
+  isLoggedIn: boolean = false;
+  isPremium: boolean = false;
 
   private authService = inject(AuthService);
   private snackBar = inject(MatSnackBar);
@@ -65,6 +67,15 @@ export class PaymentSuccessComponent implements OnInit{
     // Call your auth service to get a new token with updated roles
     // For now, we'll just update the auth service
     this.authService.updatePremiumStatus();
+  }
+
+  logout() {
+    localStorage.removeItem('jwt');
+    localStorage.removeItem('spotify_token');
+    this.authService.clearToken();
+    this.isLoggedIn = false;
+    this.isPremium = false;
+    this.router.navigate(['/']);
   }
 
 }

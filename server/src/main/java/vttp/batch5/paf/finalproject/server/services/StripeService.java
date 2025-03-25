@@ -51,8 +51,8 @@ public class StripeService {
                 .setCustomer(customer.getId())
                 .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
                 .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
-                .setSuccessUrl(appUrl + "/payment/success?session_id={CHECKOUT_SESSION_ID}")
-                .setCancelUrl(appUrl + "/payment/cancel")
+                .setSuccessUrl(appUrl + "/#/payment/success?session_id={CHECKOUT_SESSION_ID}")
+                .setCancelUrl(appUrl + "/#/payment/cancel")
                 .addLineItem(
                         SessionCreateParams.LineItem.builder()
                                 .setPrice(priceId)

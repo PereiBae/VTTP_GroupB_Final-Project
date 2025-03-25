@@ -53,9 +53,17 @@ public class SecurityConfig{
                         .requestMatchers(  "/", "/index.html", "/favicon.ico",
                                 "/assets/**",
                                 "/styles*.css", "/main*.js", "/runtime*.js",
-                                "/polyfills*.js", "/scripts*.js","/icons/144x144.png","/manifest.json",
-                                "/**/*.png", "/**/*.jpg", "/**/*.jpeg").permitAll()
+                                "/polyfills*.js", "/scripts*.js","/icons/**","/manifest.json", "/app-icon.png", "/api/auth/login", "api/auth/register", "/api/payment",
+                                "/callback","/callback/**").permitAll()
+                        // Allow all paths with payment in them for Stripe callbacks
+                        .requestMatchers(
+                                "/payment/**",
+                                "/payment",
+                                "/payment/success"
+                        ).permitAll()
                         // Require authentication for all other API requests
+                        // Auth endpoints don't need authentication
+                        .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
                 )

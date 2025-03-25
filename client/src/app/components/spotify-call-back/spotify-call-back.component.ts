@@ -14,6 +14,9 @@ export class SpotifyCallBackComponent implements OnInit{
   private router = inject(Router)
   private spotifyService = inject(SpotifyService)
 
+  error: string | null = null;
+  processing = true;
+
   ngOnInit(): void {
     // Get the code from the URL
     this.route.queryParams.subscribe(params => {
@@ -22,7 +25,9 @@ export class SpotifyCallBackComponent implements OnInit{
 
       if (error) {
         console.error('Spotify authentication error:', error);
-        this.navigateBack();
+        this.error = error;
+        this.processing = false;
+        setTimeout(() => this.navigateBack(), 3000);
         return;
       }
 
@@ -31,15 +36,20 @@ export class SpotifyCallBackComponent implements OnInit{
         this.spotifyService.exchangeCodeForToken(code).subscribe({
           next: () => {
             console.log('Token obtained successfully');
+            this.processing = false;
             this.navigateBack();
           },
           error: (err) => {
             console.error('Error exchanging code for token:', err);
-            this.navigateBack();
+            this.error = 'Failed to exchange code for token';
+            this.processing = false;
+            setTimeout(() => this.navigateBack(), 3000);
           }
         });
       } else {
-        this.navigateBack();
+        this.error = 'No authorization code received';
+        this.processing = false;
+        setTimeout(() => this.navigateBack(), 3000);
       }
     });
   }

@@ -39,7 +39,8 @@
               {
                 "glob": "**/*",
                 "input": "public"
-              }
+              },
+              "src/manifest.json"
             ],
             "styles": [
               "src/black-dashboard-theme.scss",

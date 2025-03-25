@@ -1,4 +1,11 @@
 <div class="callback-container">
-  <mat-spinner></mat-spinner>
-  <p>Processing Spotify authorization...</p>
+  <mat-spinner *ngIf="processing"></mat-spinner>
+  <p *ngIf="processing">Processing Spotify authorization...</p>
+
+  <div *ngIf="error" class="error-message">
+    <mat-icon>error</mat-icon>
+    <h3>Authorization Error</h3>
+    <p>{{ error }}</p>
+    <p>Redirecting back to the application...</p>
+  </div>
 </div>

@@ -36,7 +36,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         if (path.endsWith(".js") || path.endsWith(".css") || path.endsWith(".html") ||
                 path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg") ||
                 path.endsWith(".ico") || path.endsWith(".svg") || path.endsWith(".json") ||
-                path.startsWith("/assets/") || path.startsWith("/icons/")) {
+                path.startsWith("/assets/") || path.startsWith("/icons/") || path.contains("/payment/success")) {
 
             System.out.println("JwtRequestFilter: Skipping JWT check for: " + path);
             chain.doFilter(request, response);

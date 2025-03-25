@@ -8,3 +8,15 @@
 p {
   margin-top: 20px;
 }
+.error-message {
+  color: #f44336;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.error-message mat-icon {
+  font-size: 48px;
+  height: 48px;
+  width: 48px;
+  margin-bottom: 16px;
+}

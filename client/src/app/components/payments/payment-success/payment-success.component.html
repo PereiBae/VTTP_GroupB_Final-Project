@@ -10,8 +10,8 @@
         <mat-icon>check_circle</mat-icon>
       </div>
       <h2>Payment Successful!</h2>
-      <p>Thank you for upgrading to Premium! You now have access to all premium features.</p>
-      <button mat-raised-button color="primary" routerLink="/dashboard">Go to Dashboard</button>
+      <p>Thank you for upgrading to Premium! You now have access to all premium features. Please log back in to enjoy it!</p>
+      <button mat-raised-button color="primary" (click)="logout()">Log Out</button>
     </mat-card-content>
 
     <mat-card-content *ngIf="!loading && !success">
