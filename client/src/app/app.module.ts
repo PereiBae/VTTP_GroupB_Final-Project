@@ -44,7 +44,7 @@ const appRoutes: Routes = [
   { path: 'diary', component: DiaryListComponent, canActivate: [AuthGuard] },
   { path: 'diary/new', component: DiaryEntryComponent, canActivate: [AuthGuard] },
   { path: 'diary/:id', component: DiaryEntryComponent, canActivate: [AuthGuard] },
-  { path: 'callback', component:SpotifyCallBackComponent},
+  { path: 'spotify-callback', component:SpotifyCallBackComponent},
 
   // Template routes
   { path: 'templates', component: TemplateListComponent, canActivate: [AuthGuard] },

@@ -7,7 +7,7 @@
     </button>
   </div>
 
-  <form [formGroup]="diaryForm" (ngSubmit)="saveDiaryEntry()">
+  <form [formGroup]="diaryForm" (submit)="saveDiaryEntry()">
     <mat-card>
       <mat-card-content>
         <!-- Date and Feeling Section -->
@@ -216,7 +216,7 @@
 
           <!-- Connect to Spotify button -->
           <div *ngIf="!spotifyConnected" class="spotify-connect">
-            <button mat-raised-button color="accent" (click)="connectToSpotify()">
+            <button mat-raised-button color="accent" type="button" (click)="connectToSpotify()">
               <mat-icon>music_note</mat-icon>
               Connect to Spotify
             </button>

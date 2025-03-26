@@ -40,7 +40,9 @@
                 "glob": "**/*",
                 "input": "public"
               },
-              "src/manifest.json"
+              "src/manifest.json",
+              "src/icons/144x144.png",
+              "src/icons/180x180.png"
             ],
             "styles": [
               "src/black-dashboard-theme.scss",

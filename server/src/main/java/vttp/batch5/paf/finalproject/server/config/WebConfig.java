@@ -28,7 +28,7 @@ public class WebConfig {
                                 "/", "/index.html",
                                 "/*.js", "/*.css", "/*.ico", "/*.png", "/*.json",
                                 "/polyfills-FFHMD2TL.js", "/main-YAYMII3O.js",
-                                "/assets/**", "/icons/**"
+                                "/assets/**", "/icons/**","/icons/144x144.png","/icons/180x180.png"
                         )
                         .addResourceLocations(
                                 "classpath:/static/",
