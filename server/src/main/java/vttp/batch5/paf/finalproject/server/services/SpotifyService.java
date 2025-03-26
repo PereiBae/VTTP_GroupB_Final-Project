@@ -112,22 +112,34 @@ public class SpotifyService {
     }
 
     public Map<String, Object> refreshAccessToken(String refreshToken) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.setBasicAuth(clientId, clientSecret); // Use Base64 encoding
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            headers.setBasicAuth(clientId, clientSecret);
 
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("grant_type", "refresh_token");
-        body.add("refresh_token", refreshToken);
+            MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+            body.add("grant_type", "refresh_token");
+            body.add("refresh_token", refreshToken);
 
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
+            HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
 
-        RestTemplate restTemplate = new RestTemplate();
-        return restTemplate.postForObject(
-                "https://accounts.spotify.com/api/token",
-                entity,
-                Map.class
-        );
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    "https://accounts.spotify.com/api/token",
+                    HttpMethod.POST,
+                    entity,
+                    Map.class
+            );
+
+            System.out.println("Refreshed Spotify token. New access token received: " +
+                    (response.getBody().containsKey("access_token") ? "yes" : "no"));
+
+            return response.getBody();
+        } catch (Exception e) {
+            System.err.println("Error refreshing token: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
 }

@@ -1,6 +1,7 @@
 import {Component, inject, OnInit} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {SpotifyService} from '../../services/spotify.service';
+import {MatSnackBar} from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-spotify-call-back',
@@ -13,6 +14,7 @@ export class SpotifyCallBackComponent implements OnInit{
   private route = inject(ActivatedRoute)
   private router = inject(Router)
   private spotifyService = inject(SpotifyService)
+  private snackBar = inject(MatSnackBar);
 
   error: string | null = null;
   processing = true;
@@ -34,15 +36,26 @@ export class SpotifyCallBackComponent implements OnInit{
       if (code) {
         console.log('Received Spotify auth code, exchanging for token');
         this.spotifyService.exchangeCodeForToken(code).subscribe({
-          next: () => {
+          next: (response) => {
             console.log('Token obtained successfully');
+            console.log('Access token exists:', !!response.access_token);
+            console.log('Refresh token exists:', !!response.refresh_token);
+
             this.processing = false;
+            this.snackBar.open('Successfully connected to Spotify!', 'Close', {
+              duration: 3000
+            });
             this.navigateBack();
           },
           error: (err) => {
             console.error('Error exchanging code for token:', err);
             this.error = 'Failed to exchange code for token';
             this.processing = false;
+            this.snackBar.open('Failed to connect to Spotify.', 'Try Again', {
+              duration: 5000
+            }).onAction().subscribe(() => {
+              this.router.navigate(['/diary/new']);
+            });
             setTimeout(() => this.navigateBack(), 3000);
           }
         });

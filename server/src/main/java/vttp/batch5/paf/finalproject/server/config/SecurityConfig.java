@@ -54,7 +54,7 @@ public class SecurityConfig{
                                 "/assets/**",
                                 "/styles*.css", "/main*.js", "/runtime*.js",
                                 "/polyfills*.js", "/scripts*.js","/icons/**","/manifest.json", "/app-icon.png", "/api/auth/login", "api/auth/register", "/api/payment",
-                                "/callback","/callback/**","/icons/144x144.png","/icons/180x180.png","/api/spotify/search", "/api/spotify/**").permitAll()
+                                "/callback","/callback/**","/icons/144x144.png","/icons/180x180.png","/api/spotify/search", "/api/spotify/**","/api/spotify/refresh-token").permitAll()
                         // Allow all paths with payment in them for Stripe callbacks
                         .requestMatchers(
                                 "/payment/**",

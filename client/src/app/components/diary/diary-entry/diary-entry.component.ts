@@ -645,14 +645,28 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
     return (this.getExerciseSets(exerciseIndex) as FormArray).controls;
   }
 
-  connectToSpotify() {
+  connectToSpotify(event?: MouseEvent) {
+    // If event exists, prevent form submission
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
     // Store the current entry ID if editing
     if (this.entryId) {
       sessionStorage.setItem('return_to_entry', this.entryId);
     }
 
-    this.spotifyService.getAuthUrl().subscribe(url => {
-      window.location.href = url;
+    this.spotifyService.getAuthUrl().subscribe({
+      next: url => {
+        window.location.href = url;
+      },
+      error: err => {
+        console.error('Failed to get Spotify auth URL:', err);
+        this.snackBar.open('Failed to connect to Spotify. Please try again.', 'Close', {
+          duration: 3000
+        });
+      }
     });
   }
 
@@ -689,8 +703,12 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
 
   checkSpotifyToken() {
     const token = localStorage.getItem('spotify_token');
-    console.log('Spotify token exists:', !!token);
-    this.spotifyConnected = !!token;
+    const refreshToken = localStorage.getItem('spotify_refresh_token');
+    console.log('Spotify tokens exist:', {
+      accessToken: !!token,
+      refreshToken: !!refreshToken
+    });
+    this.spotifyConnected = !!token && !!refreshToken;
   }
 
   setupSpotifySearch() {
@@ -723,10 +741,14 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
               console.error('Spotify search error:', error);
               this.isSearchingSpotify = false;
 
-              // Handle token expiration
-              if (error.status === 401) {
+              // If we got an error even after attempted token refresh
+              if (error.message === 'Failed to refresh Spotify token') {
+                this.snackBar.open('Spotify connection expired. Please reconnect.', 'Connect', {
+                  duration: 5000
+                }).onAction().subscribe(() => {
+                  this.connectToSpotify();
+                });
                 this.spotifyConnected = false;
-                localStorage.removeItem('spotify_token');
               }
 
               return of([]);

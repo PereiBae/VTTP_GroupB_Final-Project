@@ -39,7 +39,6 @@ public class SpotifyController {
             @RequestParam String token) {
 
         try {
-            // Remove authentication parameter
             System.out.println("Processing Spotify search for: " + query);
             Map<String, Object> results = spotifyService.searchTracks(query, token);
             return ResponseEntity.ok(results);
@@ -60,6 +59,18 @@ public class SpotifyController {
 
         Map<String, Object> track = spotifyService.getTrack(id, token);
         return ResponseEntity.ok(track);
+    }
+
+    @PostMapping("/refresh-token")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> refreshToken(@RequestBody Map<String, String> payload) {
+        String refreshToken = payload.get("refresh_token");
+        if (refreshToken == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Refresh token is required"));
+        }
+
+        Map<String, Object> tokenResponse = spotifyService.refreshAccessToken(refreshToken);
+        return ResponseEntity.ok(tokenResponse);
     }
 
 }
