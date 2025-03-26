@@ -1,16 +1,15 @@
 package vttp.batch5.paf.finalproject.server.services;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
 
@@ -61,27 +60,36 @@ public class SpotifyService {
     }
 
     public Map<String, Object> searchTracks(String query, String accessToken) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + accessToken);
+        try {
+            System.out.println("Setting up Spotify search with token starting with: " +
+                    (accessToken != null && accessToken.length() > 5 ? accessToken.substring(0, 5) + "..." : "null"));
 
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-        String url = UriComponentsBuilder.fromHttpUrl("https://api.spotify.com/v1/search")
-                .queryParam("q", query)
-                .queryParam("type", "track")
-                .queryParam("limit", 10)
-                .build()
-                .toUriString();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + accessToken);
 
-        RestTemplate restTemplate = new RestTemplate();
+            String url = "https://api.spotify.com/v1/search?q=" +
+                    URLEncoder.encode(query, StandardCharsets.UTF_8) +
+                    "&type=track&limit=10";
 
-        ResponseEntity<Map> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                entity,
-                Map.class
-        );
+            System.out.println("Making request to: " + url);
 
-        return response.getBody();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            RestTemplate restTemplate = new RestTemplate();
+
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    Map.class
+            );
+
+            System.out.println("Spotify API response status: " + response.getStatusCode());
+            return response.getBody();
+        } catch (Exception e) {
+            System.err.println("Error in Spotify service: " + e.getClass().getName() + ": " + e.getMessage());
+            e.printStackTrace();
+            throw e; // Re-throw to let controller handle it
+        }
     }
 
     public Map<String, Object> getTrack(String trackId, String accessToken) {
@@ -101,6 +109,25 @@ public class SpotifyService {
         );
 
         return response.getBody();
+    }
+
+    public Map<String, Object> refreshAccessToken(String refreshToken) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.setBasicAuth(clientId, clientSecret); // Use Base64 encoding
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "refresh_token");
+        body.add("refresh_token", refreshToken);
+
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        return restTemplate.postForObject(
+                "https://accounts.spotify.com/api/token",
+                entity,
+                Map.class
+        );
     }
 
 }

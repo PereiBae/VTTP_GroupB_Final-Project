@@ -1,6 +1,7 @@
 package vttp.batch5.paf.finalproject.server.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -35,11 +36,19 @@ public class SpotifyController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> searchTracks(
             @RequestParam String query,
-            @RequestParam String token,
-            Authentication authentication) {
+            @RequestParam String token) {
 
-        Map<String, Object> searchResults = spotifyService.searchTracks(query, token);
-        return ResponseEntity.ok(searchResults);
+        try {
+            // Remove authentication parameter
+            System.out.println("Processing Spotify search for: " + query);
+            Map<String, Object> results = spotifyService.searchTracks(query, token);
+            return ResponseEntity.ok(results);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Spotify search error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/track/{id}")
