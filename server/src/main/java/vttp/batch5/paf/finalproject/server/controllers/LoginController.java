@@ -38,11 +38,13 @@ public class LoginController {
     @Autowired
     private MyUserDetailsService myUserDetailsService;
 
+    // Handle user login and generate JWT token
     @PostMapping(path = "/auth/login", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authRequest) {
         System.out.println("is there anything here?" + authRequest.toString());
         try {
+            // Authenticate user with Spring Security
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword())
             );
@@ -72,10 +74,12 @@ public class LoginController {
         }
     }
 
+    // Handle user registration
     @PostMapping(path = "/auth/register", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> register(@RequestBody RegistrationRequest request){
         try {
+            // Check if user already exists
             myUserDetailsService.loadUserByUsername(request.getEmail());
             JsonObject payload = Json.createObjectBuilder()
                     .add("message", "User already exists")

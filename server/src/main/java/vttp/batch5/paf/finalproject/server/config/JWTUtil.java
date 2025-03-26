@@ -21,6 +21,7 @@ public class JWTUtil {
     @Value("${jwt.secret.key}")
     private String secretKey;
 
+    // Generate a JWT token for authenticated users
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         // Extract roles/authorities as a list of strings and add them to claims.
@@ -31,6 +32,7 @@ public class JWTUtil {
         return createToken(claims, userDetails.getUsername());
     }
 
+    // Create the actual JWT token with claims and signing
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
                 .setClaims(claims)
@@ -41,10 +43,12 @@ public class JWTUtil {
                 .compact();
     }
 
+    // Extract the username from a JWT token
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
+    // Generic method to extract any claim from the token
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = Jwts.parser()
                 .setSigningKey(secretKey)
@@ -53,11 +57,13 @@ public class JWTUtil {
         return claimsResolver.apply(claims);
     }
 
+    // Validate if a token is valid for a given user
     public boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
+    // Check if a token has expired
     private boolean isTokenExpired(String token) {
         final Date expiration = extractClaim(token, Claims::getExpiration);
         return expiration.before(new Date());

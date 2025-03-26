@@ -42,6 +42,7 @@ public class SecurityConfig{
         return http.build();
     }
 
+    // Main security configuration for API endpoints
     @Bean
     @Order(2)
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -49,7 +50,7 @@ public class SecurityConfig{
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        // Static resources - be explicit about exact files having issues
+                        // Static resources - explicitly allow specific files
                         .requestMatchers(  "/", "/index.html", "/favicon.ico",
                                 "/assets/**",
                                 "/styles*.css", "/main*.js", "/runtime*.js",
@@ -61,9 +62,9 @@ public class SecurityConfig{
                                 "/payment",
                                 "/payment/success"
                         ).permitAll()
-                        // Require authentication for all other API requests
                         // Auth endpoints don't need authentication
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Require authentication for all other API requests
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
                 )
@@ -75,6 +76,7 @@ public class SecurityConfig{
         return http.build();
     }
 
+    // Configure CORS settings for cross-origin requests
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -89,11 +91,13 @@ public class SecurityConfig{
         return source;
     }
 
+    // Password encoder bean for securely hashing user passwords
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // Authentication manager bean for validating user credentials
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();

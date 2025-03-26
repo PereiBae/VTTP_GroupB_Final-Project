@@ -27,12 +27,12 @@ export class WorkoutStore extends ComponentStore<WorkoutState> {
     super(initialState);
   }
 
-  // SELECTORS
+  // SELECTORS - Extract data from state
   readonly currentWorkout$ = this.select(state => state.currentWorkout);
   readonly loading$ = this.select(state => state.loading);
   readonly error$ = this.select(state => state.error);
 
-  // Derived selectors
+  // Derived selectors - Calculate values based on other selectors
   readonly exercises$ = this.select(
     this.currentWorkout$,
     (workout) => workout?.exercises || []
@@ -43,7 +43,7 @@ export class WorkoutStore extends ComponentStore<WorkoutState> {
     (exercises) => exercises.length > 0
   );
 
-  // UPDATERS (setState actions)
+  // UPDATERS
   readonly setLoading = this.updater((state, loading: boolean) => ({
     ...state,
     loading,
@@ -63,6 +63,7 @@ export class WorkoutStore extends ComponentStore<WorkoutState> {
     error: null
   }));
 
+  // Update specific details of the workout without changing the whole object
   readonly updateWorkoutDetails = this.updater((state, details: Partial<WorkoutSession>) => {
     if (!state.currentWorkout) return state;
 
@@ -75,6 +76,7 @@ export class WorkoutStore extends ComponentStore<WorkoutState> {
     };
   });
 
+  // Add a new exercise to the workout
   readonly addExercise = this.updater((state, exercise: ExerciseLog) => {
     if (!state.currentWorkout) return state;
 
@@ -89,6 +91,7 @@ export class WorkoutStore extends ComponentStore<WorkoutState> {
     };
   });
 
+  // Update an existing exercise at a specific index
   readonly updateExercise = this.updater((state, payload: { index: number, exercise: Partial<ExerciseLog> }) => {
     if (!state.currentWorkout) return state;
 
@@ -108,6 +111,7 @@ export class WorkoutStore extends ComponentStore<WorkoutState> {
     };
   });
 
+  // Remove an exercise from the workout
   readonly removeExercise = this.updater((state, index: number) => {
     if (!state.currentWorkout) return state;
 
@@ -122,6 +126,7 @@ export class WorkoutStore extends ComponentStore<WorkoutState> {
     };
   });
 
+  // Add a set to a specific exercise
   readonly addSet = this.updater((state, payload: { exerciseIndex: number, set: ExerciseSet }) => {
     if (!state.currentWorkout) return state;
 
@@ -145,6 +150,7 @@ export class WorkoutStore extends ComponentStore<WorkoutState> {
     };
   });
 
+  // Update a specific set within an exercise
   readonly updateSet = this.updater(
     (state, payload: { exerciseIndex: number, setIndex: number, set: Partial<ExerciseSet> }) => {
       if (!state.currentWorkout) return state;
@@ -175,6 +181,7 @@ export class WorkoutStore extends ComponentStore<WorkoutState> {
     }
   );
 
+  // Remove a set from an exercise
   readonly removeSet = this.updater(
     (state, payload: { exerciseIndex: number, setIndex: number }) => {
       if (!state.currentWorkout) return state;
@@ -205,6 +212,7 @@ export class WorkoutStore extends ComponentStore<WorkoutState> {
   );
 
   // EFFECTS (for side effects like API calls)
+  // Initialize a new workout with default values
   readonly initializeWorkout = this.effect((params$: Observable<Partial<WorkoutSession>>) => {
     return params$.pipe(
       tap(() => this.setLoading(true)),
@@ -220,6 +228,7 @@ export class WorkoutStore extends ComponentStore<WorkoutState> {
     );
   });
 
+  // Load an existing workout by ID from the server
   readonly loadWorkout = this.effect((workoutId$: Observable<string>) => {
     return workoutId$.pipe(
       tap(() => this.setLoading(true)),
@@ -234,6 +243,7 @@ export class WorkoutStore extends ComponentStore<WorkoutState> {
     );
   });
 
+  // Save the current workout to the server
   readonly saveWorkout = this.effect((trigger$: Observable<void>) => {
     return trigger$.pipe(
       withLatestFrom(this.currentWorkout$),
@@ -268,6 +278,7 @@ export class WorkoutStore extends ComponentStore<WorkoutState> {
     );
   });
 
+  // Mark the workout as finished and save it
   readonly finishWorkout = this.effect((trigger$: Observable<void>) => {
     return trigger$.pipe(
       withLatestFrom(this.currentWorkout$),

@@ -13,13 +13,11 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="manifest" href="/manifest.json">
   <script>
-    // Polyfill for Node.js globals in browser environment - safer approach
     window.global = window;
     window.process = {
       env: { DEBUG: undefined },
       nextTick: function(cb) { setTimeout(cb, 0); }
     };
-    // DO NOT use require() directly in the browser
   </script>
 </head>
 <body>

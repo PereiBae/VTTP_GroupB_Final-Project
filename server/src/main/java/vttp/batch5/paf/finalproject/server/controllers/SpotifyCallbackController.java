@@ -33,8 +33,6 @@ public class SpotifyCallbackController {
         // Log the successful receipt of authorization code
         System.out.println("Received Spotify authorization code: " + code.substring(0, 5) + "...");
 
-        // Redirect to the Angular app with the code as a query parameter
-        // The Angular app will handle exchanging this code for a token
         return new RedirectView("/#/spotify-callback?code=" + code);
     }
 

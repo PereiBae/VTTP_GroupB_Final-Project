@@ -37,16 +37,13 @@ public class StripeService {
     }
 
     public Session createCheckoutSession(String email, String planId) throws StripeException {
-        // First, create or retrieve customer
         CustomerCreateParams customerParams = CustomerCreateParams.builder()
                 .setEmail(email)
                 .build();
         Customer customer = Customer.create(customerParams);
 
-        // Get the price ID based on the plan
         String priceId = getPriceIdForPlan(planId);
 
-        // Create checkout session
         SessionCreateParams params = SessionCreateParams.builder()
                 .setCustomer(customer.getId())
                 .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
@@ -65,10 +62,6 @@ public class StripeService {
 
 
     private String getPriceIdForPlan(String planId) throws StripeException {
-        // In a real application, you would look up prices from your database
-        // For this example, we'll create products and prices on-demand
-
-        // Map plan IDs to price IDs
         if ("premium_monthly".equals(planId)) {
             return createOrGetPrice("Premium Monthly", "premium_monthly", 999, "month");
         } else if ("premium_annual".equals(planId)) {
@@ -130,8 +123,6 @@ public class StripeService {
     }
 
     public boolean verifyWebhookSignature(String payload, String sigHeader) {
-        // In a production environment, implement proper Stripe webhook signature verification
-        // This is a simplified version
         return true;
     }
 

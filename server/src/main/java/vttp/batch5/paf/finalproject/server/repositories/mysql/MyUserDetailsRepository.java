@@ -29,13 +29,11 @@ public class MyUserDetailsRepository {
     private final String UPDATE_PREMIUM = "UPDATE users SET is_premium = true WHERE email = ?";
     private final String CHECK_PREMIUM = "SELECT is_premium FROM users WHERE email = ?";
 
-    // Fix for MyUserDetailsRepository.java
     @Transactional
     public boolean upgradeToPremium(String email) {
-        // You're likely missing the email parameter in the update call
         int updated = jdbcTemplate.update(
                 UPDATE_PREMIUM,
-                email);  // Make sure to pass the email parameter here
+                email);
 
         return updated > 0;
     }
@@ -69,7 +67,6 @@ public class MyUserDetailsRepository {
             int rows = jdbcTemplate.update(INSERT_USER, email, encodedPassword);
             return rows > 0;
         } catch (Exception e) {
-            // Log the exception in a real-world application
             return false;
         }
     }

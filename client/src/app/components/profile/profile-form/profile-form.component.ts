@@ -100,7 +100,6 @@ export class ProfileFormComponent implements OnInit{
       const token = this.authService.getToken();
       if (!token) return '';
 
-      // Parse token (simple implementation - in production, use a proper JWT library)
       const payload = JSON.parse(atob(token.split('.')[1]));
       return payload.sub || '';
     } catch (error) {

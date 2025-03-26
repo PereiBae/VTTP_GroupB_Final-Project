@@ -68,7 +68,7 @@ export class SpotifyCallBackComponent implements OnInit{
   }
 
   private navigateBack(): void {
-    // Check if we have a saved entry ID to return to
+    // Check if have a saved entry ID to return to
     const entryId = sessionStorage.getItem('return_to_entry');
     if (entryId) {
       sessionStorage.removeItem('return_to_entry');

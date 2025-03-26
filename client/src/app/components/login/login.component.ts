@@ -14,7 +14,7 @@ export class LoginComponent implements OnInit {
 
   protected form!: FormGroup;
   loginError: string | null = null;
-  hidePassword = true;
+  hidePassword = true; // Controls password visibility toggle
 
   private fb = inject(FormBuilder)
   private router = inject(Router)
@@ -25,6 +25,7 @@ export class LoginComponent implements OnInit {
     this.createForm();
   }
 
+  // Initialize login form with validation
   createForm() {
     this.form = this.fb.group({
       email: this.fb.control<string>('', [Validators.required, Validators.email]),
@@ -32,6 +33,7 @@ export class LoginComponent implements OnInit {
     })
   }
 
+  // Handle login form submission
   login() {
     const e:string = this.form.value.email;
     const p:string = this.form.value.password;
@@ -51,10 +53,10 @@ export class LoginComponent implements OnInit {
         }
 
         console.log('Token received:', response.token);
-        // Save token (for example, in localStorage)
+        // Store token through auth service
         this.authService.setToken(response.token);
         console.log('Token stored in localStorage:', localStorage.getItem('jwt'));
-        // Navigate to a protected page after login
+        // Navigate to dashboard after successful login
         this.router.navigate(['/dashboard']);
       },
       error: (err) => {

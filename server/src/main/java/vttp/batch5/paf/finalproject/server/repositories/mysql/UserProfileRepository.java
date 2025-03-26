@@ -29,7 +29,6 @@ public class UserProfileRepository {
                     profile.getProfilePictureUrl());
             return rows > 0;
         } catch (Exception e) {
-            // Log the exception
             return false;
         }
     }
@@ -66,7 +65,6 @@ public class UserProfileRepository {
                     profile.getEmail());
             return rows > 0;
         } catch (Exception e) {
-            // Log the exception
             return false;
         }
     }

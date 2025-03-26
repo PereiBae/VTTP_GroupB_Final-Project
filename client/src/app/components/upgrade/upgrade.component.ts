@@ -170,9 +170,6 @@ export class UpgradeComponent implements OnInit{
   }
 
   updateAuthStatus() {
-    // Call login method to refresh the JWT token
-    // This should trigger a backend call to get a new token with updated roles
-    // For simplicity, we'll just update the local premium status
     this.isPremium = true;
   }
 

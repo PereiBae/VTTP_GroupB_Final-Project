@@ -16,7 +16,7 @@ export class PremiumGuard implements CanActivate {
     if (this.authService.isPremiumUser()) {
       return true;
     } else {
-      /// Show message to user explaining why they were redirected
+      // Show message to user explaining why they were redirected
       this.snackBar.open(
         'This feature requires a premium subscription.',
         'UPGRADE',

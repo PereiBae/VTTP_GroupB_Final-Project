@@ -41,7 +41,7 @@ export class PaymentSuccessComponent implements OnInit{
 
   // Update in payment-success.component.ts
   verifyPayment(sessionId: string) {
-    // Make sure you're properly passing auth headers
+    // Make sure properly passing auth headers
     this.paymentService.getSessionStatus(sessionId).subscribe({
       next: (response) => {
         this.loading = false;
@@ -64,8 +64,6 @@ export class PaymentSuccessComponent implements OnInit{
   }
 
   refreshToken() {
-    // Call your auth service to get a new token with updated roles
-    // For now, we'll just update the auth service
     this.authService.updatePremiumStatus();
   }
 

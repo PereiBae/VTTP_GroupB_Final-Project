@@ -16,11 +16,12 @@ export class RegistrationComponent implements OnInit{
   private registrationSvc = inject(RegistrationService)
 
   protected form!: FormGroup;
-  hidePassword = true;
-  hideConfirmPassword = true;
+  hidePassword = true; // For password visibility toggle
+  hideConfirmPassword = true; // For confirm password visibility toggle
   registrationError: string | null = null;
 
   ngOnInit() {
+    // Initialize the registration form with validation
     this.form = this.fb.group({
       email: this.fb.control<string>('', [Validators.required, Validators.email]),
       password: this.fb.control('', [Validators.required, Validators.minLength(8)]),
@@ -28,7 +29,7 @@ export class RegistrationComponent implements OnInit{
     }, { validators: this.passwordMatchValidator() });
   }
 
-  // Custom validator to check if passwords match
+  // Custom validator to check if password and confirm password fields match
   passwordMatchValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const password = control.get('password');
@@ -59,7 +60,7 @@ export class RegistrationComponent implements OnInit{
     return 'very-strong';
   }
 
-  // Get password strength text description
+  // Provides text description of password strength
   getPasswordStrengthText(password: string): string {
     const strengthClass = this.getPasswordStrengthClass(password);
     switch (strengthClass) {
@@ -71,8 +72,9 @@ export class RegistrationComponent implements OnInit{
     }
   }
 
-
+  // Handle registration form submission
   register(): void {
+    // Double-check passwords match before submission
     if (this.form.value.password !== this.form.value.confirmPassword) {
       alert('Passwords do not match');
       return;
@@ -81,10 +83,11 @@ export class RegistrationComponent implements OnInit{
     const email: string = this.form.value.email;
     const password: string = this.form.value.password;
 
+    // Call registration service to create user account
     this.registrationSvc.register(email, password).subscribe({
       next: (res) => {
         alert(res.message || 'Registration successful');
-        this.router.navigate(['/']);
+        this.router.navigate(['/']); // Redirect to login page
       },
       error: (err) => {
         alert('Registration failed: ' + (err.error || err.statusText));

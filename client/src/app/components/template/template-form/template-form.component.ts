@@ -119,8 +119,6 @@ export class TemplateFormComponent implements OnInit{
   }
 
   openExerciseSearch(): void {
-    // For now, just add an empty exercise
-    // In a future implementation, this would open a search dialog
     this.addExercise();
   }
 

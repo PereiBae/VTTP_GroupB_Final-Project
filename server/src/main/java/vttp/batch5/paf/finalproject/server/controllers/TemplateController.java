@@ -35,7 +35,7 @@ public class TemplateController {
             template.setName((String) payload.get("name"));
             template.setDescription((String) payload.get("description"));
 
-            // Extract exercises (you'll need to convert this from Map to List<TemplateExercise>)
+            // Extract exercises (convert from Map to List<TemplateExercise>)
             List<Map<String, Object>> exercisesMap = (List<Map<String, Object>>) payload.get("exercises");
             List<TemplateExercise> exercises = convertToExerciseList(exercisesMap);
 

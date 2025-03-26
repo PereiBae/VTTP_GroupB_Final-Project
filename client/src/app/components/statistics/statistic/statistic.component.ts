@@ -57,7 +57,6 @@ export class StatisticComponent implements OnInit{
 
   // Initialize default chart options
   initChartOptions(): void {
-    // Common options for dark theme
     const darkTheme = {
       color: '#ffffff',
       gridColor: 'rgba(255, 255, 255, 0.1)',

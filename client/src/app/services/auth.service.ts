@@ -13,9 +13,10 @@ export interface JwtPayload {
 })
 export class AuthService {
 
+  // Observable to track premium subscription status changes
   private premiumStatusSubject = new BehaviorSubject<boolean>(false);
   public premiumStatus$ = this.premiumStatusSubject.asObservable();
-  // Add a subject to broadcast auth state changes
+  // Observable to broadcast authentication state changes throughout the app
   private authStateSubject = new BehaviorSubject<boolean>(false);
   public authStateChanged$ = this.authStateSubject.asObservable();
 
@@ -26,11 +27,12 @@ export class AuthService {
     this.authStateSubject.next(!!this.getToken())
   }
 
+  // Retrieves JWT token from browser's local storage
   getToken(): string | null {
     return localStorage.getItem('jwt');
   }
 
-  // Enhanced isPremiumUser with better error handling and caching
+  // Determines if user has premium subscription by checking token authorities
   isPremiumUser(): boolean {
     try {
       const token = this.getToken();
@@ -38,13 +40,14 @@ export class AuthService {
 
       const decoded = jwtDecode<JwtPayload>(token);
 
-      // Check if token is expired
+      // Check if token is expired (convert seconds to milliseconds)
       if (decoded.exp && decoded.exp * 1000 < Date.now()) {
         console.warn('JWT token expired');
         localStorage.removeItem('jwt');
         return false;
       }
 
+      // Check if user has premium role in authorities array
       return decoded.authorities &&
         Array.isArray(decoded.authorities) &&
         decoded.authorities.includes('ROLE_PREMIUM');
@@ -56,20 +59,15 @@ export class AuthService {
 
   // Update premium status and notify components
   updatePremiumStatus(): void {
-    // In a real implementation, you would make an API call to get a new token
-    // with updated roles. For simplicity, we'll just update the local state.
+    // In actual implementation, this would make an API call
+    // Here I am just checking the existing token
     const token = localStorage.getItem('jwt');
     if (token) {
       try {
-        // For demo purposes, we'll modify the token in local storage
-        // to include the premium role.
-        // DO NOT do this in production! Always get a new valid token from server.
+        // For demo purposes - in production, I will get a new token from server
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (!payload.authorities.includes('ROLE_PREMIUM')) {
           payload.authorities.push('ROLE_PREMIUM');
-
-          // This is just for demonstration - normally you would get a new token
-          // from the server with the updated roles
           console.log('Premium status updated in local state');
         }
         this.premiumStatusSubject.next(true);
@@ -79,7 +77,7 @@ export class AuthService {
     }
   }
 
-  // This method should be called after successful login
+  // Stores JWT token in local storage after successful login
   setToken(token: string): void {
     localStorage.setItem('jwt', token);
     this.updatePremiumStatus();
@@ -93,6 +91,7 @@ export class AuthService {
     this.authStateSubject.next(false);
   }
 
+  // Decodes the JWT token to access its payload
   decodeToken(token: string): JwtPayload {
     return jwtDecode<JwtPayload>(token);
   }

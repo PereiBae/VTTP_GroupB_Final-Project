@@ -25,19 +25,20 @@ import {MatAccordion} from '@angular/material/expansion';
 })
 export class DiaryEntryComponent implements OnInit, OnDestroy{
 
-  // Add ViewChild to reference MatAccordion for expansion panel control
+  // reference MatAccordion for expansion panel control
   @ViewChild(MatAccordion) accordion!: MatAccordion;
 
   // Track the expansion state of each exercise panel
   expandedExercises: { [index: number]: boolean } = {};
 
-  // Add inside the class
+  // Spotify integration properties
   spotifySearchControl = new FormControl('');
   spotifySearchResults: SpotifyTrack[] = [];
   selectedTrack: SpotifyTrack | null = null;
   isSearchingSpotify = false;
   spotifyConnected = false;
 
+  // Form groups for diary entry and workout data
   diaryForm!: FormGroup;
   workoutForm!: FormGroup;
   isEdit = false;
@@ -47,7 +48,7 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
   workoutSelected = false;
   templates: WorkoutTemplate[] = [];
 
-  // ComponentStore selectors
+  // Observable streams from WorkoutStore
   workout$: Observable<WorkoutSession | null>;
   workoutLoading$: Observable<boolean>;
   workoutError$: Observable<string | null>;
@@ -121,7 +122,7 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
   }
 
   ngOnDestroy(): void {
-
+    // Clean up subscriptions to prevent memory leaks
     if (this.spotifySearchSubscription) {
       this.spotifySearchSubscription.unsubscribe();
     }
@@ -130,6 +131,7 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
     this.destroy$.complete();
   }
 
+  // Initialize form groups with validation
   createForms(): void {
     // Create diary form
     this.diaryForm = this.formBuilder.group({
@@ -151,6 +153,7 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
     });
   }
 
+  // Fetch available workout templates
   loadTemplates(): void {
     this.templateService.getTemplates().subscribe({
       next: (templates) => {
@@ -162,6 +165,7 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
     });
   }
 
+  // Load an existing diary entry for editing
   loadDiaryEntry(id: string): void {
     this.loading = true;
     this.diaryService.getDiaryEntryById(id).subscribe({
@@ -199,11 +203,11 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
             id: entry.spotifyTrackId,
             name: entry.spotifyTrackName,
             artist: entry.spotifyArtistName || '',
-            albumName: '', // We don't have this stored
-            albumArt: 'assets/default-album-art.jpg' // Use a default image
+            albumName: '', // don't have this stored
+            albumArt: 'assets/default-album-art.jpg' // Use a default image but no image assigned for now
           };
 
-          // If we have a Spotify connection, try to get full track details
+          // If have a Spotify connection, try to get full track details
           if (this.spotifyConnected) {
             this.spotifyService.getTrack(entry.spotifyTrackId).subscribe({
               next: (trackDetails) => {
@@ -211,7 +215,7 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
               },
               error: (err) => {
                 console.error('Could not fetch track details:', err);
-                // We'll keep the basic track info we already set
+                // We'll keep the basic track info that was already set
               }
             });
           }
@@ -226,7 +230,7 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
     });
   }
 
-  // Get exercises FormArray
+  // Get exercises FormArray from workout form
   get exercises(): FormArray {
     return this.workoutForm.get('exercises') as FormArray;
   }
@@ -254,7 +258,7 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
     return exerciseGroup;
   }
 
-  // Create a set form group
+  // Create a set form group for an exercise set
   createSetFormGroup(set?: ExerciseSet): FormGroup {
     return this.formBuilder.group({
       setNumber: [set?.setNumber || 1],
@@ -293,6 +297,7 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
     }
   }
 
+  // Handle template selection for quick workout setup
   onTemplateSelected(template: WorkoutTemplate | null): void {
     if (!template) return;
 
@@ -324,7 +329,6 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
     });
   }
 
-  // FIXED: Add an exercise without resetting the form
   addExercise(): void {
     // Save the current expansion state
     this.saveExpansionState();
@@ -442,7 +446,7 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
     }, 10);
   }
 
-  // FIXED: Remove a set without closing the expansion panel
+  // Remove a set without closing the expansion panel
   removeSet(exerciseIndex: number, setIndex: number): void {
     // Save the current expansion state
     this.saveExpansionState();
@@ -501,7 +505,6 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
       }]
     };
 
-    // Add the exercise directly through the store
     this.workoutStore.addExercise(newExercise);
 
     // Use a slightly longer timeout to ensure the DOM has updated
@@ -741,7 +744,7 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
               console.error('Spotify search error:', error);
               this.isSearchingSpotify = false;
 
-              // If we got an error even after attempted token refresh
+              // If got an error even after attempted token refresh
               if (error.message === 'Failed to refresh Spotify token') {
                 this.snackBar.open('Spotify connection expired. Please reconnect.', 'Connect', {
                   duration: 5000
@@ -769,14 +772,9 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
       });
   }
 
-// Don't forget to add this property and cleanup
   private spotifySearchSubscription: Subscription | null = null;
 
-  // Helper method to save the current expansion state of all panels
-  // Replace the existing saveExpansionState method
   private saveExpansionState(): void {
-    // We're already tracking expansion state through the expandedExercises object
-    // No need to check DOM directly, just preserve the current state
     this.expandedExercises = {...this.expandedExercises};
   }
 
@@ -819,7 +817,6 @@ export class DiaryEntryComponent implements OnInit, OnDestroy{
     this.expandedExercises[exerciseIndex] = isExpanded;
   }
 
-  // Add this method to your component class
   trackByIndex(index: number): number {
     return index;
   }

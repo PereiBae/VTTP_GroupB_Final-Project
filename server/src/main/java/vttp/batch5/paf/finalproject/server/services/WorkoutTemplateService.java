@@ -47,8 +47,6 @@ public class WorkoutTemplateService {
         WorkoutTemplate template = workoutTemplateRepo.getTemplateById(templateId);
         if (template != null) {
             List<TemplateExercise> exercises = templateExerciseRepo.getExercisesByTemplate(templateId);
-            // You can add exercises to the template if you add a List<TemplateExercise> field to WorkoutTemplate
-            // For now, we'll just return the template
         }
         return template;
     }

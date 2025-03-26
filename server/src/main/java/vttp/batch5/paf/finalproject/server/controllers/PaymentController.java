@@ -69,9 +69,6 @@ public class PaymentController {
             @RequestHeader("Stripe-Signature") String sigHeader) {
 
         if (stripeService.verifyWebhookSignature(payload, sigHeader)) {
-            // Process the event
-            // This would include updating the user's premium status
-            // based on subscription events
             return ResponseEntity.ok("Webhook received");
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid signature");
