@@ -28,6 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>23</java.version>
+		<sonar.organization>pereibae</sonar.organization>
 	</properties>
 	<dependencies>
 		<dependency>
